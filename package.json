@@ -1,0 +1,97 @@
+{
+  "name": "cgat",
+  "displayName": "cgat",
+  "description": "Custom Generate Angular Template",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.98.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:cgat.generateComponent",
+    "onCommand:cgat.openConfig"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cgat.generateComponent",
+        "title": "Generate Angular Component",
+        "category": "CGAT"
+      },
+      {
+        "command": "cgat.openConfig",
+        "title": "Open CGAT Config",
+        "category": "CGAT"
+      }
+    ],
+    "configuration": {
+      "title": "CGAT",
+      "properties": {
+        "cgat.selectorPrefix": {
+          "type": "string",
+          "default": "yzf",
+          "description": "组件选择器前缀"
+        },
+        "cgat.componentConfig": {
+          "type": "object",
+          "default": {
+            "pre": {
+              "generateModule": true
+            },
+            "basic": {
+              "componentName": "",
+              "selectorPrefix": "yzf"
+            },
+            "filters": {
+              "hasCompanyFilter": false,
+              "hasDateFilter": false,
+              "hasAdvancedFilter": false
+            },
+            "buttons": {
+              "hasAddButton": true,
+              "hasDeleteButton": true,
+              "hasImportButton": false,
+              "hasExportButton": false
+            }
+          },
+          "description": "组件生成配置"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.98.0",
+    "@typescript-eslint/eslint-plugin": "^8.25.0",
+    "@typescript-eslint/parser": "^8.25.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "change-case": "^4.1.2",
+    "eslint": "^9.21.0",
+    "handlebars": "^4.7.8",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.3",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1"
+  },
+  "files": [
+    "out",
+    "media",
+    "templates"
+  ]
+}

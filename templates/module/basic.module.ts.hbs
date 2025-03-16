@@ -1,0 +1,42 @@
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { {{pascalCase componentName}}Component } from '../{{componentName}}.component';
+
+const routes: Routes = [
+  { 
+    path: '',
+    component: {{pascalCase componentName}}Component,
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class {{pascalCase componentName}}RoutingModule {}
+
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { SharedModule } from 'src/app/shared/shared.module';
+import { RemotePreTaxLedgerRoutingModule } from './remotePreTaxLedger-routing.module';
+import { BasicTemplateComponent } from './basic-template.component';
+import { BasicTemplateDetailComponent } from './detail/basic-template-detail.component';
+import { BasicTemplateRoutingModule } from './basic-template-routing.module';
+
+
+
+@NgModule({
+    declarations: [
+        {{pascalCase componentName}}Component,
+        {{pascalCase componentName}}etailComponent
+    ],
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        SharedModule,
+        {{pascalCase componentName}}RoutingModule,
+    ]
+})
+export class {{pascalCase componentName}}Module { }

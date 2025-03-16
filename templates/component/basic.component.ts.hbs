@@ -1,0 +1,311 @@
+{{! 基础组件模板 }}
+import { Component } from '@angular/core';
+import { winResizeChange } from 'src/app/utils/decorators';
+import { GlobalService } from 'src/app/services';
+import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzModalService, NzModalRef } from 'ng-zorro-antd/modal';
+import { TaskAssignmentRespDTO, ImportType } from '@/app/types/tax-fcs/import/task-assignment-resp';
+import { taskObservable } from '@/app/utils/observableList';
+import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Debounce } from 'lodash-decorators';
+import { ImportMethods } from '../property-tax-sources.const';
+
+@winResizeChange
+@Component({
+  selector: '{{selectorPrefix}}-{{componentName}}',
+  templateUrl: ['./{{componentName}}.component.ts'],
+  styleUrls: ['./{{componentName}}.component.less']
+})
+export class {{pascalCase componentName}}Component implements OnInit, AfterViewInit, OnDestroy {
+
+    innerPageH = 800; // 内页高度
+    tableHeight = 500; // 表格高度
+{{#if filters.hasDateFilter}}
+    date: any;
+    startDate = null;
+{{/if}}
+{{#if filters.hasCompanyFilter}}
+    // 企业筛选
+    allCorporationList: any[] = [];
+    corporationTree: any[] = []; // 集团公司树
+    selectedCorporationTree: any[] = []; // 集团公司树
+    corporationValue: string[] = []; // 选中的集团公司
+    companyIds = [];
+{{/if}}
+
+{{#if filters.hasAdvancedFilter}}
+    // 高级筛选
+    queryParmetes = {
+      exampleFilter: null,
+    };
+    searchNum = 0;
+    isOpenSearch = false;
+    filterBadgeObj: FilterConfigObj = {
+        exampleFilter: {
+            type: 'select',
+            width: 120,
+            placeHolder: 'exampleFilter',
+            condition: cloneDeep(taxLayerTypes)
+        },
+    };
+{{/if}}
+    // 表格
+    listOfData: any[] = [];
+    pageNumber = 1;
+    pageSize = 30;
+    total = 0;
+    tableLoading = false;
+    isIndeterminate = false;
+    mapOfCheckedId: { [key: string]: boolean } = {};
+    isAllDataChecked: boolean;
+    checkedRows: any[] = [];
+{{#if buttons.hasAddButton}}
+    // 房产税源drawer
+    nyDrawerShow = false;
+    drawerName = '';
+    infoData = null;
+    infoType = 'add';
+{{/if}}
+{{#if buttons.hasImportButton}}
+    // 导入
+    importData = {
+        url: '/example/import',
+        template: {
+            name: 'xxx模板',
+            type: 'TAX_COMMON_PROPERTY_BASE_INFO_TEMPLATE',
+        },
+        importMethods: ImportMethods
+
+    }
+    importVisible: boolean;
+    private importSubscription: Subscription;
+{{/if}}
+
+
+    constructor(
+        private globalService: GlobalService,
+        private modalService: NzModalService,
+        private message: NzMessageService,
+        private service: {{pascalCase componentName}}Service,
+    ) {
+    {{#if buttons.hasImportButton}}
+        this.handImportListener();
+    {{/if}}
+    }
+
+    ngOnInit(): void {
+    {{#if filters.hasDateFilter}}
+        this.setDate();
+    {{/if}}
+    {{#if filters.hasCompanyFilter}}
+        this.initAllCorporationList();
+    {{/if}}
+        this.refreshData(true);
+    }
+
+    ngAfterViewInit(): void { }
+    ngOnDestroy() {
+    {{#if buttons.hasImportButton}}
+        this.importSubscription?.unsubscribe();
+    {{/if}}
+    }
+{{#if buttons.hasImportButton}}
+    handImportListener() {
+        this.importSubscription = taskObservable().subscribe((message: TaskAssignmentRespDTO) => {
+            const { type, status } = message;
+            if (type === ImportType.IMPORT_TAX_COMMON_FCS_PROPERTY_SOURCE_INFO) {
+                if (status === 2) {
+                    this.refreshData();
+                } else if (status === 3) {
+                    this.message.error('导入失败！');
+                }
+            }
+        });
+    }
+{{/if}}
+{{#if filters.hasDateFilter}}
+    setDate() {
+        let year: number = Number(localStorage.getItem('accountingYear'));
+        let month: number = Number(localStorage.getItem('accountingMonth'));
+        if (year && month) {
+            const prevDate = dayjs(`${year}-${month}-01`).toDate();
+            this.date = prevDate;
+        } else {
+            const date = dayjs(this.globalService.userData.sysdate).toDate();
+            year = date.getFullYear();
+            month = date.getMonth() + 1;
+            const prevDate = new Date(year, month - 1, 0);
+            this.date = prevDate;
+        }
+    }
+    // 日期禁选控制
+    disabledDate = (current: Date): boolean => {
+        const sysdate = dayjs(this.userData.sysdate).toDate();
+        const kjnd = sysdate.getFullYear();
+        const kjqj = sysdate.getMonth() + 1;
+        const time = new Date(current.getFullYear(), current.getMonth(), 1).getTime();
+        const startDate = dayjs(this.startDate).toDate();
+        return time > new Date(kjnd, kjqj, 0).getTime() ||
+            time < new Date(startDate.getFullYear(), startDate.getMonth(), 0).getTime();
+    }
+{{/if}}
+{{#if filters.hasAdvancedFilter}}
+    seniorSearch() {
+      this.isOpenSearch = !this.isOpenSearch;
+      this.ngAfterViewInit();
+    }
+    selectChange(obj) {
+      for (const key of Object.keys(this.queryParmetes)) {
+        this.queryParmetes[key] = obj[key] ? obj[key].value : null;
+      }
+      this.searchNum = Object.keys(obj).length;
+      this.refreshData(true);
+    }
+    @Debounce(500)
+    keyupSearchFunc(e) {
+        this.refreshData(true);
+    }
+{{/if}}
+{{#if filters.hasCompanyFilter}}
+    // 改变选中的集团树
+    onTagChange($event: string[]): void {
+        this.companyIds = $event;
+        this.getTableData(true);
+    }
+    // 获取所有企业
+    initAllCorporationList() {
+        this.globalService.initCompanyList().then((res) => {
+            if (res.code === '0') {
+                this.allCorporationList = res.result || [];
+            }
+        });
+    }
+{{/if}}
+    // 获取列表数据
+    getTableData(isFirst: boolean = false) {
+        if (isFirst) {
+            this.pageNumber = 1;
+        }
+        this.tableLoading = true;
+        const params = {
+        {{#if filters.hasCompanyFilter}}
+            companyIds: this.companyIds,
+        {{/if}}
+            propertyTaxCodeOrName: this.propertyTaxCodeOrName,
+            pageNumber: this.pageNumber,
+            pageSize: this.pageSize,
+            tenantId: this.globalService.userData.tenantId,
+            userId: this.globalService.userData.userId,
+        };
+        this.service.getPropertyTaxList(params).then(result => {
+            this.listOfData = result.list || [];
+            this.total = result.total;
+        }).catch(() => {
+            this.listOfData = [];
+            this.total = 0;
+        }).finally(() => {
+            this.tableLoading = false;
+        });
+    }
+
+    // 更新数据
+    refreshData(isFirst: boolean = false): void {
+        this.clearTableChecked();
+        this.getTableData(isFirst);
+    }
+    // 全选id
+    checkAll(value: boolean): void {
+        this.listOfData.forEach(item => (this.mapOfCheckedId[item.companyId + item.id] = value));
+        this.refreshStatus();
+    }
+
+    // 选中表格数据
+    refreshStatus(): void {
+        this.isAllDataChecked = this.listOfData.every(item => this.mapOfCheckedId[item.companyId + item.id]);
+        this.isIndeterminate = this.listOfData.some(item => this.mapOfCheckedId[item.companyId + item.id]) && !this.isAllDataChecked;
+        this.checkedRows = this.listOfData.filter(item => this.mapOfCheckedId[item.companyId + item.id]);
+    }
+
+    // 清除table checked缓存
+    clearTableChecked() {
+        this.isAllDataChecked = false;
+        this.isIndeterminate = false;
+        this.checkedRows = [];
+        this.mapOfCheckedId = {};
+    }
+{{#if buttons.hasAddButton}}
+    // 新增
+    handleAdd() {
+        this.drawerName = '新增房产';
+        this.infoData = null;
+        this.infoType = 'add';
+        this.nyDrawerShow = true;
+    }
+{{/if}}
+{{#if buttons.hasEditButton}}
+    // 编辑
+    handleEdit(data) {
+        this.drawerName = '编辑房产';
+        this.infoData = data;
+        this.infoType = 'edit';
+        this.nyDrawerShow = true;
+    }
+{{/if}}
+{{#if buttons.hasDeleteButton}}
+    // 删除
+    handleDelete(data) {
+        this.service.deletePropertyTaxInfo(data.id).then(res => {
+            this.message.success('删除成功！');
+            this.getTableData();
+        });
+    }
+
+{{/if}}
+{{#if (or buttons.hasAddButton buttons.hasEditButton)}}
+    closeDrawer() {
+        this.nyDrawerShow = false;
+    }
+    successEvent(value) {
+        if (value === 'success' || value === 'successAdd') {
+            this.getTableData();
+        }
+        this.closeDrawer();
+    }
+{{/if}}
+{{#if buttons.hasImportButton}}
+    doUpload() {
+        this.uploadComponent.showModal();
+        this.importVisible = true;
+    }
+{{/if}}
+
+{{#if buttons.hasExportButton}}
+    allExport(badgeAnimation) {
+        this.message.info('正在导出中!');
+        badgeAnimation.onStart(badgeAnimation);
+        const params = {
+            companyIds: this.companyIds,
+            propertyTaxCodeOrName: this.propertyTaxCodeOrName,
+            tenantId: this.globalService.userData.tenantId,
+            userId: this.globalService.userData.userId,
+        };
+        this.service.exportAllPropertyTaxInfo(params);
+    }
+    batchExport(badgeAnimation) {
+        if (this.checkedRows.length === 0) {
+            this.message.warning('请选择数据');
+            return;
+        }
+        this.message.info('正在导出中!');
+        badgeAnimation.onStart(badgeAnimation);
+        const params = {
+            companyIds: this.companyIds,
+            propertyTaxCodeOrName: this.propertyTaxCodeOrName,
+            tenantId: this.globalService.userData.tenantId,
+            userId: this.globalService.userData.userId,
+            propertyIds: this.checkedRows.map(row => row.id)
+        };
+        this.service.exportSelectPropertyTaxInfo(params);
+    }
+{{/if}}
+}

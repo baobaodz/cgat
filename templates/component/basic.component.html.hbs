@@ -1,0 +1,177 @@
+
+<ny-page-box [pageHeader]="pageHeader" [pageBody]="pageBody" [pageFooter]="pageFooter"
+    [nzStyle]="{ height: innerPageH + 'px' }"></ny-page-box>
+
+<!-- 表格搜索区 -->
+<ng-template #pageHeader>
+    <div class="clearfix">
+        <!-- 左侧筛选区 -->
+        <div class="f-l">
+            {{#if filters.hasDateFilter}}
+            <div class="search-item">
+              <nz-month-picker [(ngModel)]="date" [nzAllowClear]="false" nzFormat="yyyy年MM期"
+                  [nzDisabledDate]="disabledDate" (ngModelChange)="refreshData(true)">
+              </nz-month-picker>
+            </div>
+            {{/if}}
+            {{#if filters.hasCompanyFilter}}
+            <div class="search-item">
+                <yzf-company-select
+                    [nyStyle]="{width:'360px'}"
+                    [(options)]="corporationTree"
+                    [(selectOptions)]="selectedCorporationTree"
+                    [(nyModel)]="corporationValue"
+                    (nyModelChange)="onTagChange($event)"
+                >
+                </yzf-company-select>
+            </div>
+            {{/if}}
+            <div class="search-item">
+                <nz-input-group nzSearch [nzSuffix]="suffixIconButton">
+                    <input [(ngModel)]="propertyTaxCodeOrName" (ngModelChange)="keyupSearchFunc($event.trim())" nz-input placeholder="请输入">
+                </nz-input-group>
+                <ng-template #suffixIconButton>
+                    <em class="search-input"><i nz-icon nzType="search"></i></em>
+                </ng-template>
+            </div>
+            {{#if filters.hasAdvancedFilter}}
+            <!-- 高级筛选 -->
+            <div class="search-item">
+              <div class="series-btn">
+                  <button nz-button [nzType]="searchNum > 0 || isOpenSearch ? 'primary': 'default'" style="margin-left: 0;" (click)="seniorSearch()">
+                      <i nz-icon [nzIconfont]="'iconDA-xialashaixuan'"></i>
+                      高级筛选
+                  </button>
+                  <div *ngIf="searchNum > 0" class="series">
+                      <span class="series-num">\{{searchNum}}</span>
+                  </div>
+              </div>
+            </div>
+            {{/if}}
+            <div class="search-item">
+              <button class="ant-btn-icon-only" nz-button nzType="default" style="min-width: 32px; margin-left: 0;"
+                  (click)="getTableData()">
+                  <i nz-icon nzType="redo" nzTheme="outline"></i>
+              </button>
+          </div>
+        </div>
+        <!-- 右侧操作区 -->
+        <div class="f-r">
+            {{#if buttons.hasAddButton}}
+            <button nz-button nzType="primary" (click)="handleAdd()">新增</button>
+            {{/if}}
+            {{#if buttons.hasDeleteButton}}
+            <button nz-button nzType="default" (click.once)="delete()">删除</button>
+            {{/if}}
+            {{#if buttons.hasImportButton}}
+            <button nz-button nzType="default" (click.once)="doUpload()">导入</button>
+            {{/if}}
+            {{#if buttons.hasExportButton}}
+            <yzf-badge-animation #badgeAnimation>
+                <button nz-button nzType="default" nz-dropdown [nzDropdownMenu]="menu1">导出</button>
+                <nz-dropdown-menu #menu1="nzDropdownMenu">
+                    <ul nz-menu>
+                        <li nz-menu-item (click)="allExport(badgeAnimation)">全部</li>
+                        <li nz-menu-item (click)="batchExport(badgeAnimation)">选中</li>
+                    </ul>
+                </nz-dropdown-menu>
+            </yzf-badge-animation>
+            {{/if}}
+        </div>
+    </div>
+    {{#if filters.hasAdvancedFilter}}
+    <yzf-filter-badge [filterBadgeObj]="filterBadgeObj" [debounce]="500" (selectChange)="selectChange($event)">
+    </yzf-filter-badge>
+    {{/if}}
+</ng-template>
+
+<!-- 内容区 -->
+<ng-template #pageBody>
+
+    <nz-table #fixedTable [nzData]="listOfData" [nzScroll]="{x: '1170px', y: tableHeight + 'px'}"
+        [nzShowPagination]=false [nzFrontPagination]=false [nzNoResult]="listEmpty" [nzLoading]="tableLoading"
+        [nzBordered]="false" class="no-border-table">
+        <thead>
+            <tr>
+                <th nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center"
+                    [nzDisabled]="listOfData.length == 0"
+                    [(nzChecked)]="isAllDataChecked" [nzIndeterminate]="isIndeterminate" (nzCheckedChange)="checkAll($event)">
+                </th>
+                {{#if filters.hasCompanyFilter}}
+                <th nzWidth="120px" nzLeft>企业编号</th>
+                <th nzWidth="300px" nzLeft>企业名称</th>
+                {{/if}}
+                <th nzWidth="170px" nzRight="0px" style="min-width: 170px;">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let item of fixedTable.data">
+                <td nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center"
+                    [(nzChecked)]="mapOfCheckedId[item.companyId + item.id]" (nzCheckedChange)="refreshStatus()"></td>
+                {{#if filters.hasCompanyFilter}}
+                <td nzLeft="0px" [title]="item.companyCode">
+                    <div class="text-nowrap">
+                        \{{item.companyCode}}
+                    </div>
+                </td>
+                <td nzLeft [title]="item.companyName">
+                    <div *ngIf="item.companyName" class="nowrap-company-ellipsis" >
+                        <div class="text-nowrap">
+                            \{{item.companyName.slice(0, -8) }}
+                        </div>
+                        <div class="text-nowrap-noellipsis">
+                            \{{item.companyName.slice(-8) }}
+                        </div>
+                    </div>
+                </td>
+                {{/if}}
+                <td nzRight="0px" style="min-width: 170px;">
+                    <a (click)="handleEdit(item)">编辑</a>
+                    <a nz-popconfirm
+                        nzPopconfirmTitle="您确定删除当前数据吗？"
+                        (nzOnConfirm)="handleDelete(item)"
+                        nzPopconfirmPlacement="top" class="left16">删除</a>
+                </td>
+            </tr>
+        </tbody>
+    </nz-table>
+
+    <ng-template #listEmpty>
+        <ny-nodata [nzStyle]="{ height: tableHeight-34 + 'px' }"></ny-nodata>
+    </ng-template>
+</ng-template>
+
+<!-- 分页 -->
+<ng-template #pageFooter>
+    <!-- 左 -->
+    <div class="showTotal">显示 \{{listOfData.length}} 条，共 \{{total}} 条</div>
+    <!-- 右 -->
+    <nz-pagination [(nzPageIndex)]="pageNumber" [nzSize]="'small'" [(nzPageSize)]="pageSize"
+        [nzPageSizeOptions]="[30, 50, 100]" [nzTotal]="total||1" (nzPageIndexChange)='refreshData()'
+        (nzPageSizeChange)='refreshData(true)' nzShowSizeChanger nzShowQuickJumper></nz-pagination>
+</ng-template>
+
+ {{#if buttons.hasAddButton}}
+<!-- 新增/编辑drawer -->
+<nz-drawer nzWrapClassName="ny-drawer" [nzBodyStyle]="{ height: 'calc(100% - 55px)', overflow: 'auto', 'padding-bottom': '53px'}"
+    [nzWidth]="1200" [nzVisible]="nyDrawerShow" [nzTitle]="drawerName" (nzOnClose)="closeDrawer()"
+    ignoreClass="ny-drawer,ignore-btn,ant-select-dropdown-menu-item">
+    <ng-container *nzDrawerContent>
+        <yzf-basic-template-detail
+            *ngIf="nyDrawerShow"
+            [data]="infoData"
+            [type]="infoType"
+            [companyList]="allCorporationList"
+            (successInfo)="successEvent($event)"
+        ></yzf-basic-template-detail>
+    </ng-container>
+</nz-drawer>
+{{/if}}
+<!-- 导入 -->
+<!-- <yzf-property-upload #uploadComponent
+    [importUrl]="importData.url"
+    [template]="importData.template"
+    [importMethods]="importData.importMethods"
+>
+</yzf-property-upload> -->
+

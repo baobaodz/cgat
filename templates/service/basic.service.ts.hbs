@@ -1,0 +1,26 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable({ providedIn: 'root' })
+export class {{pascalCase componentName}}Service {
+  private apiUrl = 'api/{{componentName}}';
+
+  constructor(private http: HttpClient) {}
+
+  fetchData(params?: any): Observable<any> {
+    return this.http.get(this.apiUrl, { params });
+  }
+
+  createItem(data: any): Observable<any> {
+    return this.http.post(this.apiUrl, data);
+  }
+
+  updateItem(id: string, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, data);
+  }
+
+  deleteItem(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+}
