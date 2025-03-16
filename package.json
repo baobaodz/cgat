@@ -3,6 +3,11 @@
   "displayName": "cgat",
   "description": "Custom Generate Angular Template",
   "version": "0.0.1",
+  "publisher": "baobaodz",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/baobaodz/cgat.git"
+  },
   "engines": {
     "vscode": "^1.98.0"
   },
