@@ -1,26 +1,65 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
-@Injectable({ providedIn: 'root' })
+import { RequestService } from 'src/app/utils/request.service';
+import { GlobalService } from 'src/app/services/global.service';
+@Injectable({
+    providedIn: 'root'
+})
 export class {{pascalCase componentName}}Service {
-  private apiUrl = 'api/{{componentName}}';
+    constructor(
+        private ajax: RequestService,
+        private message: NzMessageService,
+        public globalService: GlobalService
+    ) { }
+    prefix = '/coapi/cotax';
+    moduleName = '{{componentName}}';
 
-  constructor(private http: HttpClient) {}
+    get{{pascalCase componentName}}List(parmas: any) {
+        const url = `${this.prefix}/${this.moduleName}/list`;
+        return this.ajax.request(url, {
+            method: 'post',
+            params: parmas
+        });
+    }
 
-  fetchData(params?: any): Observable<any> {
-    return this.http.get(this.apiUrl, { params });
+    get{{pascalCase componentName}}Detail(id) {
+        const url = `${this.prefix}/${this.moduleName}/detail/${id}`;
+        return this.ajax.request(url, {
+            method: 'get',
+        });
+    }
+    add{{pascalCase componentName}}(params: any) {
+        const url = `${this.prefix}/${this.moduleName}/add`;
+        return this.ajax.request(url, {
+            method: 'post',
+            params: params
+        });
+    }
+    update{{pascalCase componentName}}(params: any) {
+        const url = `${this.prefix}/${this.moduleName}/update`;
+        return this.ajax.request(url, {
+            method: 'post',
+            params: params
+        });
+    }
+    delete{{pascalCase componentName}}(id) {
+        const url = `${this.prefix}/${this.moduleName}/delete/${id}`;
+        return this.ajax.request(url, {
+            method: 'delete',
+        });
+    }
+    exportAll{{pascalCase componentName}}(params: any) {
+        const url = `${this.prefix}/${this.moduleName}/exportAll`;
+        return this.ajax.request(url, {
+            method: 'post',
+            params: params
+        });
+    }
+    exportSelect{{pascalCase componentName}}(params: any) {
+        const url = `${this.prefix}/${this.moduleName}/exportSelect`;
+        return this.ajax.request(url, {
+            method: 'post',
+            params: params
+        });
+    }
   }
 
-  createItem(data: any): Observable<any> {
-    return this.http.post(this.apiUrl, data);
-  }
-
-  updateItem(id: string, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}`, data);
-  }
-
-  deleteItem(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
-  }
-}

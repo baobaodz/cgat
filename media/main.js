@@ -44,5 +44,9 @@
             ...config
         });
     });
+    
+    document.getElementById('selectPath')?.addEventListener('click', () => {
+      vscode.postMessage({ command: 'selectPath' });
+    });
   })();
   

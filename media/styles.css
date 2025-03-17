@@ -11,6 +11,12 @@
     padding: 8px;
     width: 200px;
   }
+  input[name="targetPath"] {
+    width: 450px;
+  }
+  input[type="checkbox"], input[type="radio"] {
+    cursor: pointer;
+  }
   
   button {
     padding: 8px 15px;

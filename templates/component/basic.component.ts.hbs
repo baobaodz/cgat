@@ -1,19 +1,25 @@
 {{! 基础组件模板 }}
-import { Component } from '@angular/core';
-import { winResizeChange } from 'src/app/utils/decorators';
-import { GlobalService } from 'src/app/services';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService, NzModalRef } from 'ng-zorro-antd/modal';
+import { Debounce } from 'lodash-decorators';
+import { cloneDeep } from 'lodash-es';
+import { dayjs } from 'dayjs';
+
+import { winResizeChange } from 'src/app/utils/decorators';
+import { GlobalService } from 'src/app/services';
+{{#if buttons.hasImportButton}}
 import { TaskAssignmentRespDTO, ImportType } from '@/app/types/tax-fcs/import/task-assignment-resp';
 import { taskObservable } from '@/app/utils/observableList';
-import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
-import { Debounce } from 'lodash-decorators';
-import { ImportMethods } from '../property-tax-sources.const';
+{{/if}}
+import { {{pascalCase componentName}}Service } from './{{componentName}}.service';
+import { Examples } from './{{componentName}}.const';
 
 @winResizeChange
 @Component({
   selector: '{{selectorPrefix}}-{{componentName}}',
-  templateUrl: ['./{{componentName}}.component.ts'],
+  templateUrl: './{{componentName}}.component.ts',
   styleUrls: ['./{{componentName}}.component.less']
 })
 export class {{pascalCase componentName}}Component implements OnInit, AfterViewInit, OnDestroy {
@@ -32,7 +38,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     corporationValue: string[] = []; // 选中的集团公司
     companyIds = [];
 {{/if}}
-
+    {{camelCase componentName}}CodeOrName = '';
 {{#if filters.hasAdvancedFilter}}
     // 高级筛选
     queryParmetes = {
@@ -40,12 +46,12 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     };
     searchNum = 0;
     isOpenSearch = false;
-    filterBadgeObj: FilterConfigObj = {
+    filterBadgeObj = {
         exampleFilter: {
             type: 'select',
             width: 120,
             placeHolder: 'exampleFilter',
-            condition: cloneDeep(taxLayerTypes)
+            condition: cloneDeep(Examples)
         },
     };
 {{/if}}
@@ -55,12 +61,13 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     pageSize = 30;
     total = 0;
     tableLoading = false;
+{{#if buttons.hasSelection}}
     isIndeterminate = false;
     mapOfCheckedId: { [key: string]: boolean } = {};
     isAllDataChecked: boolean;
     checkedRows: any[] = [];
-{{#if buttons.hasAddButton}}
-    // 房产税源drawer
+{{/if}}
+{{#if (or buttons.hasAddButton table.hasEditButton)}}
     nyDrawerShow = false;
     drawerName = '';
     infoData = null;
@@ -140,7 +147,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     }
     // 日期禁选控制
     disabledDate = (current: Date): boolean => {
-        const sysdate = dayjs(this.userData.sysdate).toDate();
+        const sysdate = dayjs(this.globalService.userData.sysdate).toDate();
         const kjnd = sysdate.getFullYear();
         const kjqj = sysdate.getMonth() + 1;
         const time = new Date(current.getFullYear(), current.getMonth(), 1).getTime();
@@ -161,11 +168,11 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
       this.searchNum = Object.keys(obj).length;
       this.refreshData(true);
     }
+{{/if}}
     @Debounce(500)
     keyupSearchFunc(e) {
         this.refreshData(true);
     }
-{{/if}}
 {{#if filters.hasCompanyFilter}}
     // 改变选中的集团树
     onTagChange($event: string[]): void {
@@ -191,13 +198,15 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         {{#if filters.hasCompanyFilter}}
             companyIds: this.companyIds,
         {{/if}}
-            propertyTaxCodeOrName: this.propertyTaxCodeOrName,
+        {{#if filters.hasAdvancedFilter}}
+            ...this.queryParmetes,
+        {{/if}}
             pageNumber: this.pageNumber,
             pageSize: this.pageSize,
             tenantId: this.globalService.userData.tenantId,
             userId: this.globalService.userData.userId,
         };
-        this.service.getPropertyTaxList(params).then(result => {
+        this.service.get{{pascalCase componentName}}List(params).then(result => {
             this.listOfData = result.list || [];
             this.total = result.total;
         }).catch(() => {
@@ -210,9 +219,12 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 
     // 更新数据
     refreshData(isFirst: boolean = false): void {
+    {{#if table.hasSelection}}
         this.clearTableChecked();
+    {{/if}}
         this.getTableData(isFirst);
     }
+{{#if table.hasSelection}}
     // 全选id
     checkAll(value: boolean): void {
         this.listOfData.forEach(item => (this.mapOfCheckedId[item.companyId + item.id] = value));
@@ -233,35 +245,47 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         this.checkedRows = [];
         this.mapOfCheckedId = {};
     }
+{{/if}}
 {{#if buttons.hasAddButton}}
-    // 新增
     handleAdd() {
-        this.drawerName = '新增房产';
+        this.drawerName = '新增';
         this.infoData = null;
         this.infoType = 'add';
         this.nyDrawerShow = true;
     }
 {{/if}}
-{{#if buttons.hasEditButton}}
-    // 编辑
+{{#if table.hasEditButton}}
     handleEdit(data) {
-        this.drawerName = '编辑房产';
+        this.drawerName = '编辑';
         this.infoData = data;
         this.infoType = 'edit';
         this.nyDrawerShow = true;
     }
 {{/if}}
 {{#if buttons.hasDeleteButton}}
-    // 删除
-    handleDelete(data) {
-        this.service.deletePropertyTaxInfo(data.id).then(res => {
+    handleBatchDelete() {
+        const params = {
+            ids: this.checkedRows.map(item => item.id),
+            tenantId: this.globalService.userData.tenantId,
+            userId: this.globalService.userData.userId, 
+        }
+        this.service.delete{{pascalCase componentName}}(params).then(res => {
             this.message.success('删除成功！');
             this.getTableData();
         });
     }
 
 {{/if}}
-{{#if (or buttons.hasAddButton buttons.hasEditButton)}}
+{{#if table.hasDeleteButton}}
+    handleDelete(data) {
+        this.service.delete{{pascalCase componentName}}(data.id).then(res => {
+            this.message.success('删除成功！');
+            this.getTableData();
+        });
+    }
+
+{{/if}}
+{{#if (or buttons.hasAddButton table.hasEditButton)}}
     closeDrawer() {
         this.nyDrawerShow = false;
     }
@@ -284,12 +308,16 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         this.message.info('正在导出中!');
         badgeAnimation.onStart(badgeAnimation);
         const params = {
+        {{#if filters.hasCompanyFilter}}
             companyIds: this.companyIds,
-            propertyTaxCodeOrName: this.propertyTaxCodeOrName,
+        {{/if}}
+        {{#if filters.hasAdvancedFilter}}
+            ...this.queryParmetes,
+        {{/if}}
             tenantId: this.globalService.userData.tenantId,
             userId: this.globalService.userData.userId,
         };
-        this.service.exportAllPropertyTaxInfo(params);
+        this.service.exportAll{{pascalCase componentName}}(params);
     }
     batchExport(badgeAnimation) {
         if (this.checkedRows.length === 0) {
@@ -299,13 +327,17 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         this.message.info('正在导出中!');
         badgeAnimation.onStart(badgeAnimation);
         const params = {
+        {{#if filters.hasCompanyFilter}}
             companyIds: this.companyIds,
-            propertyTaxCodeOrName: this.propertyTaxCodeOrName,
+        {{/if}}
+        {{#if filters.hasAdvancedFilter}}
+            ...this.queryParmetes,
+        {{/if}}
             tenantId: this.globalService.userData.tenantId,
             userId: this.globalService.userData.userId,
-            propertyIds: this.checkedRows.map(row => row.id)
+            ids: this.checkedRows.map(row => row.id)
         };
-        this.service.exportSelectPropertyTaxInfo(params);
+        this.service.exportSelect{{pascalCase componentName}}(params);
     }
 {{/if}}
 }

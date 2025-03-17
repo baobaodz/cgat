@@ -2,7 +2,7 @@
   "name": "cgat",
   "displayName": "cgat",
   "description": "Custom Generate Angular Template",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "baobaodz",
   "repository": {
     "type": "git",
@@ -23,7 +23,7 @@
     "commands": [
       {
         "command": "cgat.generateComponent",
-        "title": "Generate Angular Component",
+        "title": "🚁 CGAT: Generate Angular Component",
         "category": "CGAT"
       },
       {
@@ -65,6 +65,15 @@
           "description": "组件生成配置"
         }
       }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "cgat.generateComponent",
+          "group": "navigation",
+          "when": "explorerResourceIsFolder"
+        }
+      ]
     }
   },
   "scripts": {

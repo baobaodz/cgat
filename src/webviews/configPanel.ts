@@ -5,11 +5,21 @@ import { ComponentGenerator } from '../generators/componentGenerator';
 export class ConfigPanel {
   public static currentPanel: ConfigPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
+  private _targetPath: string | undefined;
 
-  private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
+  private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, targetPath?: string) {
     this._panel = panel;
+    this._targetPath = targetPath;
     this._panel.webview.html = this._getWebviewContent(context);
     this._setupWebviewHooks(context);
+    // 添加面板关闭事件监听
+    this._panel.onDidDispose(
+      () => {
+        ConfigPanel.currentPanel = undefined;
+      },
+      null,
+      context.subscriptions
+    );
   }
 
   private _getWebviewContent(context: vscode.ExtensionContext) {
@@ -26,6 +36,17 @@ export class ConfigPanel {
         <div class="container">
           <h1>CGAT 配置</h1>
           <form id="configForm">
+            <div class="section">
+              <h2>生成路径</h2>
+              <div class="form-group">
+                <label>目标路径：</label>
+                ${this._targetPath ?
+                `<span>${this._targetPath}</span>` :
+                `<input type="text" name="targetPath" required />
+                 <button type="button" id="selectPath">选择路径</button>`
+              }
+              </div>
+            </div>
             <div class="section">
               <h2>前置配置</h2>
               <div class="form-group">
@@ -101,6 +122,21 @@ export class ConfigPanel {
                 </div>
               </div>
             </div>
+            <div class="section">
+              <h2>表格设置</h2>
+              <div class="form-group">
+                <input type="checkbox" name="hasTableSelection" />
+                <label>启用多选</label>
+              </div>
+              <div class="form-group">
+                <input type="checkbox" name="hasTableEditButton" checked />
+                <label>启用编辑按钮</label>
+              </div>
+              <div class="form-group">
+                <input type="checkbox" name="hasTableDeleteButton" checked />
+                <label>启用删除按钮</label>
+              </div>
+            </div>
             <div class="button-group">
               <button type="submit" id="saveConfig">保存配置</button>
               <button type="button" id="generateComponent">生成组件</button>
@@ -135,12 +171,29 @@ export class ConfigPanel {
             hasImportButton: message.hasImportButton === 'on',
             hasExportButton: message.hasExportButton === 'on'
           },
+          table: {
+            hasSelection: message.hasTableSelection === 'on',
+            hasEditButton: message.hasTableEditButton === 'on',
+            hasDeleteButton: message.hasTableDeleteButton === 'on'
+          },
           detail: {
             type: message.detailType,
             implement: message.detailImplement
           }
         };
         switch (message.command) {
+          case 'selectPath':
+            const result = await vscode.window.showOpenDialog({
+              canSelectFiles: false,
+              canSelectFolders: true,
+              canSelectMany: false,
+              title: '选择组件生成路径'
+            });
+            if (result && result[0]) {
+              this._targetPath = result[0].fsPath;
+              this._panel.webview.html = this._getWebviewContent(context);
+            }
+            break;
           case 'saveConfig':
             await vscode.workspace.getConfiguration('cgat').update(
               'componentConfig',
@@ -150,6 +203,10 @@ export class ConfigPanel {
             vscode.window.showInformationMessage('配置已保存');
             break;
           case 'generateComponent':
+            if (!message._targetPath) {
+              vscode.window.showErrorMessage('请选择生成路径');
+              return;
+            }
             if (!message.componentName) {
               vscode.window.showErrorMessage('请输入组件名称');
               return;
@@ -159,7 +216,7 @@ export class ConfigPanel {
               config,
               vscode.ConfigurationTarget.Global
             );
-            const generator = new ComponentGenerator(context);
+            const generator = new ComponentGenerator(context, message.targetPath);
             try {
               const files = await generator.generate(config);
               vscode.window.showInformationMessage(`组件 ${message.componentName} 生成成功!`);
@@ -174,8 +231,9 @@ export class ConfigPanel {
     );
   }
 
-  public static show(context: vscode.ExtensionContext) {
+  public static show(context: vscode.ExtensionContext, targetPath?: any) {
     if (ConfigPanel.currentPanel) {
+      console.log('🚀 -> ConfigPanel -> show -> ConfigPanel.currentPanel:', ConfigPanel.currentPanel);
       ConfigPanel.currentPanel._panel.reveal();
       return;
     }
@@ -190,6 +248,6 @@ export class ConfigPanel {
       }
     );
 
-    ConfigPanel.currentPanel = new ConfigPanel(panel, context);
+    ConfigPanel.currentPanel = new ConfigPanel(panel, context, targetPath);
   }
 }

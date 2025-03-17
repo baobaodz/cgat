@@ -28,7 +28,7 @@
             {{/if}}
             <div class="search-item">
                 <nz-input-group nzSearch [nzSuffix]="suffixIconButton">
-                    <input [(ngModel)]="propertyTaxCodeOrName" (ngModelChange)="keyupSearchFunc($event.trim())" nz-input placeholder="请输入">
+                    <input [(ngModel)]="{{camelCase componentName}}CodeOrName" (ngModelChange)="keyupSearchFunc($event.trim())" nz-input placeholder="请输入">
                 </nz-input-group>
                 <ng-template #suffixIconButton>
                     <em class="search-input"><i nz-icon nzType="search"></i></em>
@@ -61,7 +61,7 @@
             <button nz-button nzType="primary" (click)="handleAdd()">新增</button>
             {{/if}}
             {{#if buttons.hasDeleteButton}}
-            <button nz-button nzType="default" (click.once)="delete()">删除</button>
+            <button nz-button nzType="default" (click.once)="handleBatchDelete()">删除</button>
             {{/if}}
             {{#if buttons.hasImportButton}}
             <button nz-button nzType="default" (click.once)="doUpload()">导入</button>
@@ -93,10 +93,12 @@
         [nzBordered]="false" class="no-border-table">
         <thead>
             <tr>
+                {{#if table.hasSelection}}
                 <th nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center"
                     [nzDisabled]="listOfData.length == 0"
                     [(nzChecked)]="isAllDataChecked" [nzIndeterminate]="isIndeterminate" (nzCheckedChange)="checkAll($event)">
                 </th>
+                {{/if}}
                 {{#if filters.hasCompanyFilter}}
                 <th nzWidth="120px" nzLeft>企业编号</th>
                 <th nzWidth="300px" nzLeft>企业名称</th>
@@ -106,8 +108,10 @@
         </thead>
         <tbody>
             <tr *ngFor="let item of fixedTable.data">
+                {{#if table.hasSelection}}
                 <td nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center"
                     [(nzChecked)]="mapOfCheckedId[item.companyId + item.id]" (nzCheckedChange)="refreshStatus()"></td>
+                {{/if}}
                 {{#if filters.hasCompanyFilter}}
                 <td nzLeft="0px" [title]="item.companyCode">
                     <div class="text-nowrap">
@@ -126,11 +130,15 @@
                 </td>
                 {{/if}}
                 <td nzRight="0px" style="min-width: 170px;">
+                    {{#if table.hasEditButton}}
                     <a (click)="handleEdit(item)">编辑</a>
+                    {{/if}}
+                    {{#if table.hasDeleteButton}}
                     <a nz-popconfirm
                         nzPopconfirmTitle="您确定删除当前数据吗？"
                         (nzOnConfirm)="handleDelete(item)"
                         nzPopconfirmPlacement="top" class="left16">删除</a>
+                    {{/if}}
                 </td>
             </tr>
         </tbody>
@@ -151,19 +159,19 @@
         (nzPageSizeChange)='refreshData(true)' nzShowSizeChanger nzShowQuickJumper></nz-pagination>
 </ng-template>
 
- {{#if buttons.hasAddButton}}
+ {{#if (or buttons.hasAddButton table.hasEditButton)}}
 <!-- 新增/编辑drawer -->
 <nz-drawer nzWrapClassName="ny-drawer" [nzBodyStyle]="{ height: 'calc(100% - 55px)', overflow: 'auto', 'padding-bottom': '53px'}"
     [nzWidth]="1200" [nzVisible]="nyDrawerShow" [nzTitle]="drawerName" (nzOnClose)="closeDrawer()"
     ignoreClass="ny-drawer,ignore-btn,ant-select-dropdown-menu-item">
     <ng-container *nzDrawerContent>
-        <yzf-basic-template-detail
+        <{{selectorPrefix}}-{{componentName}}-detail
             *ngIf="nyDrawerShow"
             [data]="infoData"
             [type]="infoType"
             [companyList]="allCorporationList"
             (successInfo)="successEvent($event)"
-        ></yzf-basic-template-detail>
+        ></{{selectorPrefix}}-{{componentName}}-detail>
     </ng-container>
 </nz-drawer>
 {{/if}}

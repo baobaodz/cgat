@@ -5,6 +5,11 @@ import { pascalCase, paramCase } from 'change-case';
 import path from 'path';
 
 export class ComponentGenerator extends BaseGenerator {
+  private targetPath: any;
+  constructor(protected context: vscode.ExtensionContext, targetPath?: string) {
+    super(context);
+    this.targetPath = targetPath;
+  }
   async generate(config: any) {
     console.log('🚀 -> ComponentGenerator -> generate -> config:', config);
 
@@ -14,11 +19,12 @@ export class ComponentGenerator extends BaseGenerator {
       selectorPrefix: config.basic.selectorPrefix,
       generateModule: config.pre.generateModule,
       filters: config.filters,
-      buttons: config.buttons
+      buttons: config.buttons,
+      detail: config.detail,
+      table: config.table,
     };
     console.log('🚀 -> ComponentGenerator -> generate -> data:', data);
 
-    const targetPath = await this.getTargetPath();
     const pathName = `${config.basic.componentName}/${config.basic.componentName}`;
     const detailPathName = `${config.basic.componentName}/detail/${config.basic.componentName}`;
     const files = [
@@ -41,6 +47,10 @@ export class ComponentGenerator extends BaseGenerator {
         {
           template: 'module/basic-routing.module.ts.hbs',
           output: `${pathName}-routing.module.ts`
+        },
+        {
+          template: 'const/basic.const.ts.hbs',
+          output: `${pathName}.const.ts`
         }
       );
     }
@@ -62,7 +72,8 @@ export class ComponentGenerator extends BaseGenerator {
     }
     const createdFiles = [];
     for (const file of files) {
-      const outputPath = path.join(targetPath, file.output);
+      const outputPath = path.join(this.targetPath, file.output);
+      console.log('🚀 -> ComponentGenerator -> generate -> outputPath:', outputPath);
       await this.generateFile(
         this.getTemplatePath(file.template),
         outputPath,
@@ -74,11 +85,4 @@ export class ComponentGenerator extends BaseGenerator {
     return createdFiles;
   }
 
-  private async getTargetPath() {
-    // 获取当前激活文件所在目录
-    const activeEditor = vscode.window.activeTextEditor;
-    return activeEditor
-      ? path.dirname(activeEditor.document.fileName)
-      : vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
-  }
 }

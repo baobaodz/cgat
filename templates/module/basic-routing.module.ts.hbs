@@ -1,11 +1,12 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { {{pascalCase componentName}}Component } from '../{{componentName}}.component';
+import { {{pascalCase componentName}}Component } from './{{componentName}}.component';
 
 const routes: Routes = [
   { 
-    path: '',
+    path: '{{componentName}}',
     component: {{pascalCase componentName}}Component,
+    data: { reuse: true }
   }
 ];
 
