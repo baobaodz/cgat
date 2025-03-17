@@ -2,10 +2,11 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import Handlebars from 'handlebars';
-import { pascalCase, camelCase } from 'change-case';
+import { pascalCase, camelCase, paramCase } from 'change-case';
 // 注册 helper
 Handlebars.registerHelper('pascalCase', (str) => pascalCase(str));
 Handlebars.registerHelper('camelCase', (str) => camelCase(str));
+Handlebars.registerHelper('paramCase', (str) => paramCase(str));
 
 Handlebars.registerHelper('or', function() {
   return Array.prototype.slice.call(arguments, 0, -1).some(Boolean);

@@ -2,7 +2,7 @@
   "name": "cgat",
   "displayName": "cgat",
   "description": "Custom Generate Angular Template",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "publisher": "baobaodz",
   "repository": {
     "type": "git",

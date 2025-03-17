@@ -69,15 +69,15 @@ export class ConfigPanel {
             <div class="section">
               <h2>筛选设置</h2>
               <div class="form-group">
-                <input type="checkbox" name="hasCompanyFilter" />
+                <input type="checkbox" name="hasCompanyFilter" checked />
                 <label>启用企业筛选</label>
               </div>
               <div class="form-group">
-                <input type="checkbox" name="hasDateFilter" />
+                <input type="checkbox" name="hasDateFilter" checked/>
                 <label>启用日期筛选</label>
               </div>
               <div class="form-group">
-                <input type="checkbox" name="hasAdvancedFilter" />
+                <input type="checkbox" name="hasAdvancedFilter" checked/>
                 <label>启用高级筛选</label>
               </div>
             </div>
@@ -203,7 +203,7 @@ export class ConfigPanel {
             vscode.window.showInformationMessage('配置已保存');
             break;
           case 'generateComponent':
-            if (!message._targetPath) {
+            if (!this._targetPath) {
               vscode.window.showErrorMessage('请选择生成路径');
               return;
             }
@@ -216,7 +216,7 @@ export class ConfigPanel {
               config,
               vscode.ConfigurationTarget.Global
             );
-            const generator = new ComponentGenerator(context, message.targetPath);
+            const generator = new ComponentGenerator(context, this._targetPath);
             try {
               const files = await generator.generate(config);
               vscode.window.showInformationMessage(`组件 ${message.componentName} 生成成功!`);

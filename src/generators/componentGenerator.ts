@@ -25,8 +25,8 @@ export class ComponentGenerator extends BaseGenerator {
     };
     console.log('🚀 -> ComponentGenerator -> generate -> data:', data);
 
-    const pathName = `${config.basic.componentName}/${config.basic.componentName}`;
-    const detailPathName = `${config.basic.componentName}/detail/${config.basic.componentName}`;
+    const pathName = `${data.componentName}/${data.componentName}`;
+    const detailPathName = `${data.componentName}/detail/${data.componentName}`;
     const files = [
       { template: 'component/basic.component.ts.hbs', output: `${pathName}.component.ts` },
       { template: 'component/basic.component.html.hbs', output: `${pathName}.component.html` },
