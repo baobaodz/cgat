@@ -16,7 +16,12 @@ export abstract class BaseGenerator {
 
 
   }
-
+  protected async findModuleFile(directory: string): Promise<string | undefined> {
+    const files = await vscode.workspace.findFiles(
+      new vscode.RelativePattern(directory, '**/*.module.ts')
+    );
+    return files[0]?.fsPath;
+  }
   protected async generateFile(templatePath: string, outputPath: string, data: object) {
     const templateContent = await fs.promises.readFile(templatePath, 'utf-8');
     const template = Handlebars.compile(templateContent);

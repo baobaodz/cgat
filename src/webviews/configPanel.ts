@@ -2,14 +2,20 @@ import * as vscode from 'vscode';
 import { getUri } from '../utilities/webviewUtils';
 import { ComponentGenerator } from '../generators/componentGenerator';
 
+export interface ConfigPanelOptions {
+  targetPath?: string;
+  existingModulePath?: string;
+}
 export class ConfigPanel {
   public static currentPanel: ConfigPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private _targetPath: string | undefined;
+  private _existingModulePath: string | undefined;
 
-  private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, targetPath?: string) {
+  private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, options: ConfigPanelOptions = {}) {
     this._panel = panel;
-    this._targetPath = targetPath;
+    this._targetPath = options?.targetPath;
+    this._existingModulePath = options?.existingModulePath;
     this._panel.webview.html = this._getWebviewContent(context);
     this._setupWebviewHooks(context);
     // 添加面板关闭事件监听
@@ -41,10 +47,10 @@ export class ConfigPanel {
               <div class="form-group">
                 <label>目标路径：</label>
                 ${this._targetPath ?
-                `<span>${this._targetPath}</span>` :
-                `<input type="text" name="targetPath" required />
+        `<span>${this._targetPath}</span>` :
+        `<input type="text" name="targetPath" required />
                  <button type="button" id="selectPath">选择路径</button>`
-              }
+      }
               </div>
             </div>
             <div class="section">
@@ -221,7 +227,7 @@ export class ConfigPanel {
               config,
               vscode.ConfigurationTarget.Global
             );
-            const generator = new ComponentGenerator(context, this._targetPath);
+            const generator = new ComponentGenerator(context, this._targetPath, this._existingModulePath);
             try {
               const files = await generator.generate(config);
               vscode.window.showInformationMessage(`组件 ${message.componentName} 生成成功!`);
@@ -236,7 +242,12 @@ export class ConfigPanel {
     );
   }
 
-  public static show(context: vscode.ExtensionContext, targetPath?: any) {
+  public static show(context: vscode.ExtensionContext, options?:
+    {
+      targetPath: any,
+      existingModulePath?: any,
+    }
+  ) {
     if (ConfigPanel.currentPanel) {
       console.log('🚀 -> ConfigPanel -> show -> ConfigPanel.currentPanel:', ConfigPanel.currentPanel);
       ConfigPanel.currentPanel._panel.reveal();
@@ -253,6 +264,6 @@ export class ConfigPanel {
       }
     );
 
-    ConfigPanel.currentPanel = new ConfigPanel(panel, context, targetPath);
+    ConfigPanel.currentPanel = new ConfigPanel(panel, context, options);
   }
 }
