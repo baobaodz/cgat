@@ -5,16 +5,16 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import dayjs from 'dayjs';
 import { FormCustomValidators } from '@/app/utils/formValidator';
 import { GlobalService } from 'src/app/services';
-import { {{pascalCase componentName}}Service } from '../{{componentName}}.service';
+import { {{pascalCase moduleName}}Service } from '../../{{moduleName}}.service';
 
 
 
 @Component({
     selector: '{{selectorPrefix}}-{{componentName}}-detail',
-    templateUrl: './{{componentName}}-detail.component.ts',
+    templateUrl: './{{componentName}}-detail.component.html',
     styleUrls: ['./{{componentName}}-detail.component.less']
 })
-export class {{pascalCase componentName}}DetailComponent implements OnInit, AfterViewInit, OnDestroy {
+export class {{pascalCase componentName}}DetailComponent implements OnInit, OnDestroy {
   @Input() data;
   @Input() type;
   @Input() companyList = [];
@@ -34,7 +34,7 @@ export class {{pascalCase componentName}}DetailComponent implements OnInit, Afte
       private fb: UntypedFormBuilder,
       private globalService: GlobalService,
       private message: NzMessageService,
-      private service: {{pascalCase componentName}}Service,
+      private service: {{pascalCase moduleName}}Service,
   ) {
 
       this.initForm();
@@ -52,7 +52,9 @@ export class {{pascalCase componentName}}DetailComponent implements OnInit, Afte
 
       }
   }
+  ngOnDestroy() {
 
+  }
   initForm() {
       const controlsConfig = {
           companyId: [null, [Validators.required]],

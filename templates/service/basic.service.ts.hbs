@@ -4,17 +4,17 @@ import { GlobalService } from 'src/app/services/global.service';
 @Injectable({
     providedIn: 'root'
 })
-export class {{pascalCase componentName}}Service {
+export class {{pascalCase moduleName}}Service {
     constructor(
         private ajax: RequestService,
-        private message: NzMessageService,
         public globalService: GlobalService
     ) { }
     prefix = '/coapi/cotax';
-    moduleName = '{{componentName}}';
+    moduleName = '{{moduleName}}';
+    componentName = '{{componentName}}';
 
     get{{pascalCase componentName}}List(parmas: any) {
-        const url = `${this.prefix}/${this.moduleName}/list`;
+        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/list`;
         return this.ajax.request(url, {
             method: 'post',
             params: parmas
@@ -22,40 +22,40 @@ export class {{pascalCase componentName}}Service {
     }
 
     get{{pascalCase componentName}}Detail(id) {
-        const url = `${this.prefix}/${this.moduleName}/detail/${id}`;
+        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/detail/${id}`;
         return this.ajax.request(url, {
             method: 'get',
         });
     }
     add{{pascalCase componentName}}(params: any) {
-        const url = `${this.prefix}/${this.moduleName}/add`;
+        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/add`;
         return this.ajax.request(url, {
             method: 'post',
             params: params
         });
     }
     update{{pascalCase componentName}}(params: any) {
-        const url = `${this.prefix}/${this.moduleName}/update`;
+        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/update`;
         return this.ajax.request(url, {
             method: 'post',
             params: params
         });
     }
     delete{{pascalCase componentName}}(id) {
-        const url = `${this.prefix}/${this.moduleName}/delete/${id}`;
+        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/delete/${id}`;
         return this.ajax.request(url, {
             method: 'delete',
         });
     }
     exportAll{{pascalCase componentName}}(params: any) {
-        const url = `${this.prefix}/${this.moduleName}/exportAll`;
+        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/exportAll`;
         return this.ajax.request(url, {
             method: 'post',
             params: params
         });
     }
     exportSelect{{pascalCase componentName}}(params: any) {
-        const url = `${this.prefix}/${this.moduleName}/exportSelect`;
+        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/exportSelect`;
         return this.ajax.request(url, {
             method: 'post',
             params: params

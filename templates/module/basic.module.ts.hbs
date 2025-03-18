@@ -1,10 +1,10 @@
 import { NgModule } from '@angular/core';
-import { SharedModule } from 'src/app/shared/shared.module';
+import { SharedModule } from 'src/app/shared';
 
-import { {{pascalCase componentName}}RoutingModule } from './{{componentName}}-routing.module';
-import { {{pascalCase componentName}}Component } from './{{componentName}}.component';
+import { {{pascalCase moduleName}}RoutingModule } from './{{moduleName}}-routing.module';
+import { {{pascalCase componentName}}Component } from './{{componentName}}/{{componentName}}.component';
 {{#if (or buttons.hasAddButton buttons.hasEditButton)}}
-import { {{pascalCase componentName}}DetailComponent } from './detail/{{componentName}}-detail.component';
+import { {{pascalCase componentName}}DetailComponent } from './{{componentName}}/detail/{{componentName}}-detail.component';
 {{/if}}
 
 
@@ -17,7 +17,7 @@ import { {{pascalCase componentName}}DetailComponent } from './detail/{{componen
     ],
     imports: [
         SharedModule,
-        {{pascalCase componentName}}RoutingModule,
+        {{pascalCase moduleName}}RoutingModule,
     ]
 })
-export class {{pascalCase componentName}}Module { }
+export class {{pascalCase moduleName}}Module { }

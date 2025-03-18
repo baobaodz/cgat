@@ -80,8 +80,10 @@
         </div>
     </div>
     {{#if filters.hasAdvancedFilter}}
-    <yzf-filter-badge [filterBadgeObj]="filterBadgeObj" [debounce]="500" (selectChange)="selectChange($event)">
-    </yzf-filter-badge>
+    <div [class.show-search]="!isOpenSearch">
+        <yzf-filter-badge [filterBadgeObj]="filterBadgeObj" [debounce]="500" (selectChange)="selectChange($event)">
+        </yzf-filter-badge>
+    </div>
     {{/if}}
 </ng-template>
 

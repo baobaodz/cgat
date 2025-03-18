@@ -53,6 +53,10 @@ export class ConfigPanel {
                 <input type="checkbox" name="generateModule" checked />
                 <label>生成模块(包含路由、服务)</label>
               </div>
+              <div class="form-group" id="moduleNameGroup">
+                <label>模块名称：</label>
+                <input type="text" name="moduleName" value="" />
+              </div>           
             </div>
             <div class="section">
               <h2>基础设置</h2>
@@ -155,6 +159,7 @@ export class ConfigPanel {
         const config = {
           pre: {
             generateModule: message.generateModule === 'on',
+            moduleName: message.moduleName
           },
           basic: {
             componentName: message.componentName,

@@ -21,6 +21,17 @@
       });
     });
     
+    function toggleModuleNameInput() {
+      const moduleNameGroup = document.getElementById('moduleNameGroup');
+      const generateModule = document.querySelector('input[name="generateModule"]');
+      moduleNameGroup.style.display = generateModule.checked ? 'flex' : 'none';
+    }
+    
+    // 初始化时执行一次
+    toggleModuleNameInput();
+    
+    // 监听复选框变化
+    document.querySelector('input[name="generateModule"]').addEventListener('change', toggleModuleNameInput);
     
 
     form.addEventListener('submit', (e) => {
@@ -44,7 +55,7 @@
             ...config
         });
     });
-    
+
     document.getElementById('selectPath')?.addEventListener('click', () => {
       vscode.postMessage({ command: 'selectPath' });
     });
