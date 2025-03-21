@@ -11,6 +11,9 @@ Handlebars.registerHelper('paramCase', (str) => paramCase(str));
 Handlebars.registerHelper('or', function() {
   return Array.prototype.slice.call(arguments, 0, -1).some(Boolean);
 });
+Handlebars.registerHelper('and', function() {
+  return Array.prototype.slice.call(arguments, 0, -1).every(Boolean);
+});
 export abstract class BaseGenerator {
   constructor(protected context: vscode.ExtensionContext) {
 

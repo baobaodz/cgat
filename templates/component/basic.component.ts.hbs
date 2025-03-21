@@ -262,7 +262,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         this.nyDrawerShow = true;
     }
 {{/if}}
-{{#if buttons.hasDeleteButton}}
+{{#if (and table.hasSelection buttons.hasDeleteButton)}}
     handleBatchDelete() {
         const params = {
             ids: this.checkedRows.map(item => item.id),

@@ -11,11 +11,14 @@ export class ConfigPanel {
   private readonly _panel: vscode.WebviewPanel;
   private _targetPath: string | undefined;
   private _existingModulePath: string | undefined;
+  private _existingModuleName: string | undefined;
 
   private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, options: ConfigPanelOptions = {}) {
     this._panel = panel;
     this._targetPath = options?.targetPath;
-    this._existingModulePath = options?.existingModulePath;
+    this._existingModulePath = options?.existingModulePath || '';
+    const pathParts = this._existingModulePath.replace(/\\/g, '/').split('/');
+    this._existingModuleName = pathParts[pathParts.length - 1].replace('.module.ts', '');
     this._panel.webview.html = this._getWebviewContent(context);
     this._setupWebviewHooks(context);
     // 添加面板关闭事件监听
@@ -47,7 +50,7 @@ export class ConfigPanel {
               <div class="form-group">
                 <label>目标路径：</label>
                 ${this._targetPath ?
-        `<span>${this._targetPath}</span>` :
+        `<span id="targetPath">${this._targetPath}</span>` :
         `<input type="text" name="targetPath" required />
                  <button type="button" id="selectPath">选择路径</button>`
       }
@@ -147,13 +150,42 @@ export class ConfigPanel {
                 <label>启用删除按钮</label>
               </div>
             </div>
+            <div class="section">
+              <h2>
+                文件目录预览
+                <div class="tip-container">
+                  <span class="tip root">*红色</span>代表根目录，
+                  <span class="tip new">*绿色</span>代表新增目录/文件，
+                  <span class="tip existing">*黄色</span>代表现有目录/文件
+                </div>
+              </h2>
+              <div id="filePreview" class="file-preview">
+                <!-- 动态生成的目录结构 -->
+              </div>
+            </div>
+
             <div class="button-group">
               <button type="submit" id="saveConfig">保存配置</button>
               <button type="button" id="generateComponent">生成组件</button>
             </div>
           </form>
         </div>
+        <script>
+          window.existingModuleName = '${this._existingModuleName || ''}';
+        </script>
         <script src="${scriptUri}"></script>
+        <script>
+          window.addEventListener('message', (event) => {
+            if (event.data.command === 'open-devtools') {
+              // 调用Chrome开发者工具（仅适用于Electron环境）
+              if (typeof require !== 'undefined') {
+                require('electron').remote.getCurrentWebContents().openDevTools();
+              }
+            }
+          });
+          // 通知插件Webview已加载完成
+          // vscode.postMessage({ command: 'webview-ready' });
+        </script>
       </body>
       </html>`;
   }
@@ -161,6 +193,9 @@ export class ConfigPanel {
   private _setupWebviewHooks(context: vscode.ExtensionContext) {
     this._panel.webview.onDidReceiveMessage(
       async (message) => {
+        if (message.command === 'webview-ready') {
+          this._panel.webview.postMessage({ command: 'open-devtools' });
+        }
         console.log('🚀 -> ConfigPanel -> message:', message);
         const config = {
           pre: {
@@ -231,6 +266,11 @@ export class ConfigPanel {
             try {
               const files = await generator.generate(config);
               vscode.window.showInformationMessage(`组件 ${message.componentName} 生成成功!`);
+              if (this._existingModuleName) {
+                setTimeout(() => {
+                  vscode.window.showInformationMessage(`组件在${this._existingModuleName}.module.ts声明成功!`);
+                }, 500); 
+              }
             } catch (error: any) {
               vscode.window.showErrorMessage(`组件生成失败: ${error.message}`);
             }
