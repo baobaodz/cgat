@@ -3,15 +3,15 @@ import { RouterModule, Routes } from '@angular/router';
 import { {{pascalCase componentName}}Component } from './{{componentName}}/{{componentName}}.component';
 
 const routes: Routes = [
-  { 
-    path: '{{componentName}}',
-    component: {{pascalCase componentName}}Component,
-    data: { reuse: true }
-  }
+    { 
+        path: '{{componentName}}',
+        component: {{pascalCase componentName}}Component,
+        data: { reuse: true }
+    }
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+    imports: [RouterModule.forChild(routes)],
+    exports: [RouterModule]
 })
 export class {{pascalCase moduleName}}RoutingModule {}

@@ -1,75 +1,75 @@
 <div class="{{selectorPrefix}}-{{componentName}}-detail-container">
-  <form nz-form [formGroup]="validateForm" >
-      <ny-panel-box [title]="'基本信息'">
-          <div nz-row [nzGutter]="24">
-              <div nz-col [nzSpan]="formLayout.itemSpan">
-                  <nz-form-item>
-                      <nz-form-label [nzSpan]="formLayout.labelSpan" nzRequired>企业</nz-form-label>
-                      <nz-form-control [nzSpan]="formLayout.controlSpan" nzErrorTip="请选择企业">
-                          <nz-select formControlName="companyId" nzPlaceHolder="请选择企业" [nzDisabled]="type !== 'add'"
-                          (ngModelChange)="companyChange($event)" [nzShowSearch]="true" nzAllowClear>
-                              <nz-option nzCustomContent *ngFor="let option of companyList" [nzLabel]="option.companyName" [nzValue]="option.companyId">
-                                  <div [title]="option.companyName">\{{option.companyName}}</div>
-                              </nz-option>
-                          </nz-select>
-                      </nz-form-control>
-                  </nz-form-item>
-              </div>
-              <div nz-col [nzSpan]="formLayout.itemSpan">
-                  <nz-form-item>
-                      <nz-form-label [nzSpan]="formLayout.labelSpan" nzRequired>房产编号</nz-form-label>
-                      <nz-form-control [nzSpan]="formLayout.controlSpan" nzErrorTip="请填写房产编号">
-                          <input nz-input formControlName="estateCode" maxlength="100" placeholder="请输入房产编号" (blur)="trimValue($event, 'estateCode')"/>
-                      </nz-form-control>
-                  </nz-form-item>
-              </div>
-              <div nz-col [nzSpan]="formLayout.itemSpan">
-                  <nz-form-item>
-                      <nz-form-label [nzSpan]="formLayout.labelSpan">房产名称</nz-form-label>
-                      <nz-form-control [nzSpan]="formLayout.controlSpan">
-                          <input nz-input formControlName="estateName" maxlength="100" placeholder="请输入" />
-                      </nz-form-control>
-                  </nz-form-item>
-              </div>
-              <div nz-col [nzSpan]="formLayout.itemSpan">
-                  <nz-form-item>
-                      <nz-form-label [nzSpan]="formLayout.labelSpan" nzRequired>产权面积</nz-form-label>
-                      <nz-form-control [nzSpan]="formLayout.controlSpan" [nzErrorTip]="estatePropertyAreaErr">
-                          <input nz-input formControlName="estatePropertyArea" maxlength="18" placeholder="请输入" />
-                          <ng-template #estatePropertyAreaErr let-control>
-                              <ng-container *ngIf="control.hasError('required')">
-                                  请填写产权面积
-                              </ng-container>
-                              <ng-container *ngIf="control.hasError('number')">
-                                  产权面积格式不正确
-                              </ng-container>
-                          </ng-template>
-                      </nz-form-control>
-                  </nz-form-item>
-              </div>
-              <div nz-col [nzSpan]="formLayout.itemSpan">
-                  <nz-form-item>
-                      <nz-form-label [nzSpan]="formLayout.labelSpan" nzRequired>不动产权证号</nz-form-label>
-                      <nz-form-control [nzSpan]="formLayout.controlSpan" nzErrorTip="请填写不动产权证号">
-                          <input nz-input formControlName="estatePropertyNumber" maxlength="100" placeholder="请输入" />
-                      </nz-form-control>
-                  </nz-form-item>
-              </div>
-              <div nz-col [nzSpan]="formLayout.itemSpan">
-                  <nz-form-item>
-                      <nz-form-label [nzSpan]="formLayout.labelSpan" nzRequired>取得时间</nz-form-label>
-                      <nz-form-control [nzSpan]="formLayout.controlSpan" nzErrorTip="请选择变更时间">
-                          <nz-month-picker style="width: 100%;" formControlName="acquisitionTime"
-                              [nzFormat]="'yyyy-MM-dd'" (ngModelChange)="dateChange($event)"></nz-month-picker>
-                      </nz-form-control>
-                  </nz-form-item>
-              </div>
-          </div>
-      </ny-panel-box>
-  </form>
+    <form nz-form [formGroup]="validateForm">
+        <nz-spin [nzSpinning]="isDetailGetting">
+            <ny-panel-box [title]="'基本信息'">
+                <div nz-row [nzGutter]="24">
+                    <div nz-col [nzSpan]="formLayout.itemSpan">
+                        <nz-form-item>
+                            <nz-form-label [nzSpan]="formLayout.labelSpan" nzRequired>企业</nz-form-label>
+                            <nz-form-control [nzSpan]="formLayout.controlSpan" nzErrorTip="请选择企业">
+                                <nz-select formControlName="companyId" nzPlaceHolder="请选择企业"
+                                    [nzDisabled]="type !== 'add'" (ngModelChange)="companyChange($event)"
+                                    [nzShowSearch]="true" nzAllowClear>
+                                    <nz-option nzCustomContent *ngFor="let option of companyList"
+                                        [nzLabel]="option.companyName" [nzValue]="option.companyId">
+                                        <div [title]="option.companyName">\{{option.companyName}}</div>
+                                    </nz-option>
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+                    <div nz-col [nzSpan]="formLayout.itemSpan">
+                        <nz-form-item>
+                            <nz-form-label [nzSpan]="formLayout.labelSpan" nzRequired>示例输入框</nz-form-label>
+                            <nz-form-control [nzSpan]="formLayout.controlSpan" nzErrorTip="请填写示例输入框">
+                                <input nz-input formControlName="exampleInputText" maxlength="100" placeholder="请输入示例输入框"
+                                    (blur)="trimValue($event, 'exampleInputText')" />
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+                    <div nz-col [nzSpan]="formLayout.itemSpan">
+                        <nz-form-item>
+                            <nz-form-label [nzSpan]="formLayout.labelSpan">示例下拉框</nz-form-label>
+                            <nz-form-control [nzSpan]="formLayout.controlSpan">
+                                <nz-select formControlName="exampleSelect" (ngModelChange)="exampleSelectChange()">
+                                    <nz-option *ngFor="let item of examples" [nzValue]="item.value" [nzLabel]="item.label"></nz-option>
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+                    <div nz-col [nzSpan]="formLayout.itemSpan">
+                        <nz-form-item>
+                            <nz-form-label [nzSpan]="formLayout.labelSpan" nzRequired>示例输入数字</nz-form-label>
+                            <nz-form-control [nzSpan]="formLayout.controlSpan" [nzErrorTip]="exampleInputNumberErr">
+                                <input nz-input formControlName="exampleInputNumber" maxlength="18" placeholder="请输入" />
+                                <ng-template #exampleInputNumberErr let-control>
+                                    <ng-container *ngIf="control.hasError('required')">
+                                        请填写示例输入数字
+                                    </ng-container>
+                                    <ng-container *ngIf="control.hasError('number')">
+                                        示例输入数字格式不正确
+                                    </ng-container>
+                                </ng-template>
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+                    <div nz-col [nzSpan]="formLayout.itemSpan">
+                        <nz-form-item>
+                            <nz-form-label [nzSpan]="formLayout.labelSpan" nzRequired>示例日期</nz-form-label>
+                            <nz-form-control [nzSpan]="formLayout.controlSpan" nzErrorTip="请选择示例日期">
+                                <nz-month-picker style="width: 100%;" formControlName="exampleDate"
+                                    [nzFormat]="'yyyy-MM-dd'" (ngModelChange)="dateChange($event)"></nz-month-picker>
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+                </div>
+            </ny-panel-box>
+        </nz-spin>
+    </form>
 
-  <div class="footer" *ngIf="type !== 'view'">
-      <button nz-button nzType="default" (click)="cancel()" style="margin-right: 16px;">取消</button>
-      <button nz-button nzType="primary" (click)="submit()" [nzLoading]="btnLoading">确定</button>
-  </div>
+    <div class="footer" *ngIf="type !== 'view'">
+        <button nz-button nzType="default" (click)="cancel()" style="margin-right: 16px;">取消</button>
+        <button nz-button nzType="primary" (click)="submit()" [nzLoading]="btnLoading"
+            [disabled]="isDetailGetting">确定</button>
+    </div>
 </div>

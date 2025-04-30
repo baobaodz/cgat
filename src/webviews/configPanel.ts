@@ -57,117 +57,177 @@ export class ConfigPanel {
               </div>
             </div>
             <div class="section">
-              <h2>前置配置</h2>
-              <div class="form-group">
-                <input type="checkbox" name="generateModule" checked />
-                <label>生成模块(包含路由、服务)</label>
-              </div>
-              <div class="form-group" id="moduleNameGroup">
-                <label>模块名称：</label>
-                <input type="text" name="moduleName" value="" />
-              </div>           
-            </div>
-            <div class="section">
               <h2>基础设置</h2>
-              <div class="form-group">
-                <label>组件名称：</label>
-                <input type="text" name="componentName" required />
-              </div>
-              <div class="form-group">
-                <label>选择器前缀：</label>
-                <input type="text" name="selectorPrefix" value="yzf" />
-              </div>
-            </div>
-
-            <div class="section">
-              <h2>筛选设置</h2>
-              <div class="form-group">
-                <input type="checkbox" name="hasCompanyFilter" checked />
-                <label>启用企业筛选</label>
-              </div>
-              <div class="form-group">
-                <input type="checkbox" name="hasDateFilter" checked/>
-                <label>启用日期筛选</label>
-              </div>
-              <div class="form-group">
-                <input type="checkbox" name="hasAdvancedFilter" checked/>
-                <label>启用高级筛选</label>
-              </div>
-            </div>
-
-            <div class="section">
-              <h2>按钮设置</h2>
-              <div class="form-group">
-                <input type="checkbox" name="hasAddButton" checked onchange="toggleDetailConfig()" />
-                <label>启用新增按钮</label>
-              </div>
-              <div class="form-group">
-                <input type="checkbox" name="hasDeleteButton" checked />
-                <label>启用删除按钮</label>
-              </div>
-              <div class="form-group">
-                <input type="checkbox" name="hasImportButton" />
-                <label>启用导入按钮</label>
-              </div>
-              <div class="form-group">
-                <input type="checkbox" name="hasExportButton" />
-                <label>启用导出按钮</label>
-              </div>
-            </div>
-            <div id="detailConfig" class="section">
-              <h2>新增/编辑详情配置</h2>
-              <div class="form-group">
-                <label>弹窗类型：</label>
-                <div class="radio-group">
-                  <input type="radio" name="detailType" value="drawer" checked />
-                  <label>nzDrawer</label>
-                  <input type="radio" name="detailType" value="modal" />
-                  <label>nzModal</label>
+              <div class="module-row">
+                <div class="form-row">
+                  <div class="form-group">
+                    <input type="checkbox" name="generateModule" checked />
+                    <label>生成模块(包含路由、服务)</label>
+                  </div>
+                  <div class="form-group" id="moduleNameGroup">
+                    <label>模块名称：</label>
+                    <input type="text" name="moduleName" value="" />
+                  </div>
                 </div>
               </div>
-              <div class="form-group">
-                <label>实现方式：</label>
-                <div class="radio-group">
-                  <input type="radio" name="detailImplement" value="template" checked />
-                  <label>template</label>
-                  <input type="radio" name="detailImplement" value="component" />
-                  <label>component</label>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>组件名称：</label>
+                  <input type="text" name="componentName" required />
+                </div>
+                <div class="form-group">
+                  <label>选择器前缀：</label>
+                  <input type="text" name="selectorPrefix" value="yzf" />
                 </div>
               </div>
             </div>
+            
             <div class="section">
-              <h2>表格设置</h2>
-              <div class="form-group">
-                <input type="checkbox" name="hasTableSelection" />
-                <label>启用多选</label>
-              </div>
-              <div class="form-group">
-                <input type="checkbox" name="hasTableEditButton" checked />
-                <label>启用编辑按钮</label>
-              </div>
-              <div class="form-group">
-                <input type="checkbox" name="hasTableDeleteButton" checked />
-                <label>启用删除按钮</label>
-              </div>
-            </div>
-            <div class="section">
-              <h2>
-                文件目录预览
-                <div class="tip-container">
-                  <span class="tip root">*红色</span>代表根目录，
-                  <span class="tip new">*绿色</span>代表新增目录/文件，
-                  <span class="tip existing">*黄色</span>代表现有目录/文件
+              <h2>页面设置</h2>
+              <!-- Tab 导航 -->
+              <div class="tab-container">
+                <div class="tab-nav">
+                  <button type="button" class="tab-btn active" data-tab="filter-tab">筛选设置</button>
+                  <button type="button" class="tab-btn" data-tab="button-tab">按钮设置</button>
+                  <button type="button" class="tab-btn" data-tab="table-tab">表格设置</button>
                 </div>
-              </h2>
-              <div id="filePreview" class="file-preview">
-                <!-- 动态生成的目录结构 -->
+                
+                <!-- Tab 内容 -->
+                <div class="tab-content">
+                  <!-- 筛选设置 Tab -->
+                  <div id="filter-tab" class="tab-pane active">
+                    <div class="section tab-section">
+                      <div class="form-group">
+                        <input type="checkbox" name="hasCompanyFilter" checked />
+                        <label>启用企业筛选</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasDateFilter" checked/>
+                        <label>启用日期筛选</label>
+                      </div>
+                      
+                      <!-- 改进的高级筛选部分 -->
+                      <div class="filter-group">
+                        <div class="filter-header">
+                          <div class="form-group">
+                            <input type="checkbox" name="hasAdvancedFilter" checked id="hasAdvancedFilter"/>
+                            <label>启用高级筛选</label>
+                          </div>
+                        </div>
+                        
+                        <div class="filter-options" id="advancedFilterOptions">
+                          <div class="filter-option-row">
+                            <div class="form-group radio-group">
+                              <input type="radio" name="advancedFilterType" value="legacy" id="legacyAdvancedFilter" checked/>
+                              <label for="legacyAdvancedFilter">yzf-filter-badge</label>
+                              </div>
+                              <div class="filter-description">原高级筛选，目前广泛使用的组件</div>
+                            </div> 
+                            <div class="filter-option-row">
+                              <div class="form-group radio-group">
+                                <input type="radio" name="advancedFilterType" value="new" id="newAdvancedFilter" />
+                                <label for="newAdvancedFilter">yzf-filter-box</label>
+                              </div>
+                              <div class="filter-description">新高级筛选，新UI，支持更多筛选类型和更好的用户体验</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 按钮设置 Tab -->
+                  <div id="button-tab" class="tab-pane">
+                    <div class="section tab-section">
+                      <div class="form-group">
+                        <input type="checkbox" name="hasAddButton" checked onchange="toggleDetailConfig()" />
+                        <label>启用新增按钮</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasDeleteButton" checked />
+                        <label>启用删除按钮</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasImportButton" />
+                        <label>启用导入按钮</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasExportButton" />
+                        <label>启用导出按钮</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasBatchFilterButton" />
+                        <label>启用批量筛选按钮</label>
+                      </div>
+                      
+                      <div id="detailConfig">
+                        <h3>新增/编辑详情配置</h3>
+                        <div class="form-group">
+                          <label>弹窗类型：</label>
+                          <div class="radio-group">
+                            <input type="radio" name="detailType" value="drawer" checked />
+                            <label>nzDrawer</label>
+                            <input type="radio" name="detailType" value="modal" />
+                            <label>nzModal</label>
+                          </div>
+                        </div>
+                        <div class="form-group">
+                          <label>实现方式：</label>
+                          <div class="radio-group">
+                            <input type="radio" name="detailImplement" value="template" checked />
+                            <label>template</label>
+                            <input type="radio" name="detailImplement" value="component" />
+                            <label>component</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 表格设置 Tab -->
+                  <div id="table-tab" class="tab-pane">
+                    <div class="section tab-section">
+                      <div class="form-group">
+                        <input type="checkbox" name="hasEnhanceTable" />
+                        <label>启用新表格（enhance-table）</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasTableSelection" />
+                        <label>启用多选</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasTableEditButton" checked />
+                        <label>启用编辑按钮</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasTableDeleteButton" checked />
+                        <label>启用删除按钮</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="section">
+                <h2>
+                  文件目录预览
+                  <div class="tip-container">
+                    <span class="tip root">*红色</span>代表根目录，
+                    <span class="tip new">*绿色</span>代表新增目录/文件，
+                    <span class="tip existing">*黄色</span>代表现有目录/文件
+                  </div>
+                </h2>
+                <div id="filePreview" class="file-preview">
+                  <!-- 动态生成的目录结构 -->
+                </div>
+              </div>
+  
+              <div class="button-group">
+                <button type="submit" id="saveConfig">保存配置</button>
+                <button type="button" id="generateComponent">生成组件</button>
               </div>
             </div>
 
-            <div class="button-group">
-              <button type="submit" id="saveConfig">保存配置</button>
-              <button type="button" id="generateComponent">生成组件</button>
-            </div>
+
           </form>
         </div>
         <script>
@@ -209,15 +269,18 @@ export class ConfigPanel {
           filters: {
             hasCompanyFilter: message.hasCompanyFilter === 'on',
             hasDateFilter: message.hasDateFilter === 'on',
-            hasAdvancedFilter: message.hasAdvancedFilter === 'on'
+            hasAdvancedFilter: message.hasAdvancedFilter === 'on',
+            advancedFilterType: message.hasAdvancedFilter === 'on' ? message.advancedFilterType : null
           },
           buttons: {
             hasAddButton: message.hasAddButton === 'on',
             hasDeleteButton: message.hasDeleteButton === 'on',
             hasImportButton: message.hasImportButton === 'on',
-            hasExportButton: message.hasExportButton === 'on'
+            hasExportButton: message.hasExportButton === 'on',
+            hasBatchFilterButton: message.hasBatchFilterButton === 'on'
           },
           table: {
+            hasEnhanceTable: message.hasEnhanceTable === 'on',
             hasSelection: message.hasTableSelection === 'on',
             hasEditButton: message.hasTableEditButton === 'on',
             hasDeleteButton: message.hasTableDeleteButton === 'on'
@@ -264,13 +327,30 @@ export class ConfigPanel {
             );
             const generator = new ComponentGenerator(context, this._targetPath, this._existingModulePath);
             try {
-              const files = await generator.generate(config);
+              // 修改这里，接收更详细的生成结果
+              const result = await generator.generate(config);
+              
+              // 显示主要成功消息
               vscode.window.showInformationMessage(`组件 ${message.componentName} 生成成功!`);
-              if (this._existingModuleName) {
-                setTimeout(() => {
-                  vscode.window.showInformationMessage(`组件在${this._existingModuleName}.module.ts声明成功!`);
-                }, 500); 
-              }
+              
+              // 根据结果显示详细信息
+              setTimeout(() => {
+                if (result.moduleUpdated) {
+                  vscode.window.showInformationMessage(`组件在 ${this._existingModuleName}.module.ts 中声明成功!`);
+                }
+                
+                if (result.routingUpdated) {
+                  setTimeout(() => {
+                    vscode.window.showInformationMessage(`组件在 ${this._existingModuleName}-routing.module.ts 中路由声明成功!`);
+                  }, 300);
+                }
+                
+                if (result.serviceUpdated) {
+                  setTimeout(() => {
+                    vscode.window.showInformationMessage(`组件相关接口在 ${this._existingModuleName}.service.ts 中更新成功!`);
+                  }, 600);
+                }
+              }, 300);
             } catch (error: any) {
               vscode.window.showErrorMessage(`组件生成失败: ${error.message}`);
             }

@@ -10,56 +10,84 @@ export class {{pascalCase moduleName}}Service {
         public globalService: GlobalService
     ) { }
     prefix = '/coapi/cotax';
-    moduleName = '{{moduleName}}';
-    componentName = '{{componentName}}';
 
-    get{{pascalCase componentName}}List(parmas: any) {
-        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/list`;
+    get{{pascalCase componentName}}List(params: any) {
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/list`;
         return this.ajax.request(url, {
             method: 'post',
-            params: parmas
+            params: params
         });
     }
 
     get{{pascalCase componentName}}Detail(id) {
-        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/detail/${id}`;
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/detail/${id}`;
         return this.ajax.request(url, {
             method: 'get',
         });
     }
+    
+    {{#if (or buttons.hasAddButton table.hasEditButton)}}
     add{{pascalCase componentName}}(params: any) {
-        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/add`;
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/add`;
         return this.ajax.request(url, {
             method: 'post',
             params: params
         });
     }
+    
     update{{pascalCase componentName}}(params: any) {
-        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/update`;
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/update`;
         return this.ajax.request(url, {
             method: 'post',
             params: params
         });
     }
+    {{/if}}
+    
+    {{#if (or buttons.hasDeleteButton table.hasDeleteButton)}}
     delete{{pascalCase componentName}}(id) {
-        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/delete/${id}`;
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/delete/${id}`;
         return this.ajax.request(url, {
             method: 'delete',
         });
     }
+    {{/if}}
+    
+    {{#if buttons.hasExportButton}}
     exportAll{{pascalCase componentName}}(params: any) {
-        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/exportAll`;
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/exportAll`;
         return this.ajax.request(url, {
             method: 'post',
             params: params
         });
     }
+    
     exportSelect{{pascalCase componentName}}(params: any) {
-        const url = `${this.prefix}/${this.moduleName}/${this.componentName}/exportSelect`;
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/exportSelect`;
         return this.ajax.request(url, {
             method: 'post',
             params: params
         });
     }
+    {{/if}}
+    
+    {{#if buttons.hasImportButton}}
+    import{{pascalCase componentName}}(params: any) {
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/import`;
+        return this.ajax.request(url, {
+            method: 'post',
+            params: params
+        });
+    }
+    {{/if}}
+    
+    {{#if buttons.hasBatchFilterButton}}
+    batchFilter{{pascalCase componentName}}(params: any) {
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/batchFilter`;
+        return this.ajax.request(url, {
+            method: 'post',
+            params: params
+        });
+    }
+    {{/if}}
   }
-

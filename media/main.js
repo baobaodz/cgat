@@ -1,6 +1,28 @@
 (function () {
   const vscode = acquireVsCodeApi();
   const form = document.getElementById("configForm");
+  
+  // Tab切换功能
+  function setupTabs() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // 移除所有active类
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanes.forEach(pane => pane.classList.remove('active'));
+        
+        // 添加active类到当前tab
+        button.classList.add('active');
+        const tabId = button.getAttribute('data-tab');
+        document.getElementById(tabId).classList.add('active');
+      });
+    });
+  }
+  // 初始化时执行一次
+  setupTabs();
+  
   // 添加详情配置显示切换函数
   function toggleDetailConfig() {
     const detailConfig = document.getElementById("detailConfig");
@@ -28,7 +50,7 @@
   function toggleModuleNameInput() {
     const moduleNameGroup = document.getElementById("moduleNameGroup");
     const generateModule = document.querySelector('input[name="generateModule"]');
-    moduleNameGroup.style.display = generateModule.checked ? "flex" : "none";
+    moduleNameGroup.style.display = generateModule.checked ? "inline-flex" : "none";
   }
 
   // 初始化时执行一次
@@ -48,11 +70,54 @@
     });
   });
 
+  // 添加高级筛选选项的显示/隐藏逻辑
+  function toggleAdvancedFilterOptions() {
+    const advancedFilterOptions = document.getElementById("advancedFilterOptions");
+    const hasAdvancedFilter = document.getElementById("hasAdvancedFilter").checked;
+    
+    if (hasAdvancedFilter) {
+      advancedFilterOptions.style.display = "block";
+      advancedFilterOptions.style.opacity = "1";
+      advancedFilterOptions.style.height = "auto";
+    } else {
+      advancedFilterOptions.style.opacity = "0";
+      advancedFilterOptions.style.height = "0";
+      setTimeout(() => {
+        advancedFilterOptions.style.display = "none";
+      }, 300);
+    }
+  }
+
+  // 初始化时执行一次
+  document.addEventListener("DOMContentLoaded", function() {
+    toggleAdvancedFilterOptions();
+    
+    // 监听高级筛选复选框变化
+    document.getElementById("hasAdvancedFilter")?.addEventListener("change", toggleAdvancedFilterOptions);
+    
+    // 高亮当前选中的筛选类型
+    const advancedFilterTypeRadios = document.querySelectorAll('input[name="advancedFilterType"]');
+    advancedFilterTypeRadios.forEach(radio => {
+      radio.addEventListener("change", function() {
+        // 找到所有行并移除高亮
+        document.querySelectorAll('.filter-option-row').forEach(row => {
+          row.classList.remove('selected');
+        });
+        // 为当前选中的行添加高亮
+        this.closest('.filter-option-row').classList.add('selected');
+      });
+    });
+  });
+
   document.getElementById("generateComponent").addEventListener("click", () => {
     const formData = new FormData(form);
     const config = Object.fromEntries(formData);
-    console.log("🚀 -> document.getElementById -> config:", config);
-
+    
+    // 添加高级筛选类型到配置
+    if (config.hasAdvancedFilter === "on") {
+      config.advancedFilterType = document.querySelector('input[name="advancedFilterType"]:checked').value;
+    }
+    
     vscode.postMessage({
       command: "generateComponent",
       ...config,

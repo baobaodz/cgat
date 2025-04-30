@@ -36,17 +36,26 @@
             </div>
             {{#if filters.hasAdvancedFilter}}
             <!-- 高级筛选 -->
+            {{#if (eq filters.advancedFilterType 'legacy')}}
             <div class="search-item">
-              <div class="series-btn">
-                  <button nz-button [nzType]="searchNum > 0 || isOpenSearch ? 'primary': 'default'" style="margin-left: 0;" (click)="seniorSearch()">
-                      <i nz-icon [nzIconfont]="'iconDA-xialashaixuan'"></i>
-                      高级筛选
-                  </button>
-                  <div *ngIf="searchNum > 0" class="series">
-                      <span class="series-num">\{{searchNum}}</span>
-                  </div>
-              </div>
+                <div class="series-btn">
+                    <button nz-button [nzType]="searchNum > 0 || isOpenSearch ? 'primary': 'default'" style="margin-left: 0;" (click)="seniorSearch()">
+                        <i nz-icon [nzIconfont]="'iconDA-xialashaixuan'"></i>
+                        高级筛选
+                    </button>
+                    <div *ngIf="searchNum > 0" class="series">
+                        <span class="series-num">\{{searchNum}}</span>
+                    </div>
+                </div>
             </div>
+            {{else if (eq filters.advancedFilterType 'new')}}
+            <div class="search-item">
+                <div class="series-btn">
+                    <yzf-senior-btn [isOpen]="isOpenSearch" (nyClick)="seniorSearch()"></yzf-senior-btn>
+                </div>
+            </div>
+            {{/if}}
+
             {{/if}}
             <div class="search-item">
               <button class="ant-btn-icon-only" nz-button nzType="default" style="min-width: 32px; margin-left: 0;"
@@ -63,6 +72,10 @@
             {{#if buttons.hasDeleteButton}}
             <button nz-button nzType="default" (click.once)="handleBatchDelete()">删除</button>
             {{/if}}
+            {{#if buttons.hasBatchFilterButton}}
+            <yzf-batch-select-enterprise *ngIf="globalService.currentView === 'Group'"
+                (valueOnChange)="onBatchSelectChange($event)"></yzf-batch-select-enterprise>
+            {{/if}}
             {{#if buttons.hasImportButton}}
             <button nz-button nzType="default" (click.once)="doUpload()">导入</button>
             {{/if}}
@@ -78,6 +91,15 @@
             </yzf-badge-animation>
             {{/if}}
         </div>
+        {{#if (and filters.hasAdvancedFilter (eq filters.advancedFilterType 'new'))}}
+        <yzf-filter-box
+            [conditions]="filterBadgeObj"
+            [isOpen]="isOpenSearch"
+            (valueChanged)="advancedfilterChange($event)"
+            (moreClickChanged)="filterBoxSizeChange()"
+        >
+        </yzf-filter-box>
+        {{/if}}
     </div>
     {{#if filters.hasAdvancedFilter}}
     <div [class.show-search]="!isOpenSearch">
@@ -89,22 +111,38 @@
 
 <!-- 内容区 -->
 <ng-template #pageBody>
-
-    <nz-table #fixedTable [nzData]="listOfData" [nzScroll]="{x: '1170px', y: tableHeight + 'px'}"
-        [nzShowPagination]=false [nzFrontPagination]=false [nzNoResult]="listEmpty" [nzLoading]="tableLoading"
-        [nzBordered]="false" class="no-border-table">
+    {{#if table.hasEnhanceTable}}
+    <yzf-enhance-table
+        [nyStyle]="{width: '100%', height: tableHeight + 'px'}"
+        [getRowId]="getRowId"
+        [columnDefs]="columnDefs"
+        [rowData]="listOfData"
+        [loading]="tableLoading"
+        (tableReadyChange)="onGridReady($event)"
+        {{#if table.hasSelection}}
+        (selectionChanged)="onSelectionChanged($event)"
+        {{/if}}
+    >
+    </yzf-enhance-table>
+    {{else}}
+    <nz-table #fixedTable [nzData]="listOfData" [nzScroll]="{x: '1170px', y: tableHeight + 'px'}" [nzShowPagination]=false
+        [nzFrontPagination]=false [nzNoResult]="listEmpty" [nzLoading]="tableLoading" [nzBordered]="false"
+        class="no-border-table">
         <thead>
             <tr>
                 {{#if table.hasSelection}}
-                <th nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center"
-                    [nzDisabled]="listOfData.length == 0"
-                    [(nzChecked)]="isAllDataChecked" [nzIndeterminate]="isIndeterminate" (nzCheckedChange)="checkAll($event)">
+                <th nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center" [nzDisabled]="listOfData.length == 0"
+                    [(nzChecked)]="isAllDataChecked" [nzIndeterminate]="isIndeterminate"
+                    (nzCheckedChange)="checkAll($event)">
                 </th>
                 {{/if}}
                 {{#if filters.hasCompanyFilter}}
                 <th nzWidth="120px" nzLeft>企业编号</th>
                 <th nzWidth="300px" nzLeft>企业名称</th>
                 {{/if}}
+                <th nzWidth="150px">示例文本</th>
+                <th nzWidth="150px" align="right">示例数字</th>
+                <th nzWidth="150px">示例枚举名称</th>
                 <th nzWidth="170px" nzRight="0px" style="min-width: 170px;">操作</th>
             </tr>
         </thead>
@@ -121,7 +159,7 @@
                     </div>
                 </td>
                 <td nzLeft [title]="item.companyName">
-                    <div *ngIf="item.companyName" class="nowrap-company-ellipsis" >
+                    <div *ngIf="item.companyName" class="nowrap-company-ellipsis">
                         <div class="text-nowrap">
                             \{{item.companyName.slice(0, -8) }}
                         </div>
@@ -131,24 +169,38 @@
                     </div>
                 </td>
                 {{/if}}
+                <td [title]="item.exampleText">
+                    <div class="text-nowrap">
+                        \{{item.exampleText}}
+                    </div>
+                </td>
+                <td [title]="item.exampleNumber" align="right">
+                    <div class="text-nowrap">
+                        \{{item.exampleNumber | number:'1.2-2'}}
+                    </div>
+                </td>
+                <td [title]="item.exampleEnum">
+                    <div class="text-nowrap">
+                        \{{exampleMap[item.exampleEnum] | nullReplace }}
+                    </div>
+                </td>
                 <td nzRight="0px" style="min-width: 170px;">
                     {{#if table.hasEditButton}}
                     <a (click)="handleEdit(item)">编辑</a>
                     {{/if}}
                     {{#if table.hasDeleteButton}}
-                    <a nz-popconfirm
-                        nzPopconfirmTitle="您确定删除当前数据吗？"
-                        (nzOnConfirm)="handleDelete(item)"
+                    <a nz-popconfirm nzPopconfirmTitle="您确定删除当前数据吗？" (nzOnConfirm)="handleDelete(item)"
                         nzPopconfirmPlacement="top" class="left16">删除</a>
                     {{/if}}
                 </td>
             </tr>
         </tbody>
     </nz-table>
-
+    
     <ng-template #listEmpty>
         <ny-nodata [nzStyle]="{ height: tableHeight-34 + 'px' }"></ny-nodata>
     </ng-template>
+    {{/if}}
 </ng-template>
 
 <!-- 分页 -->
@@ -157,11 +209,36 @@
     <div class="showTotal">显示 \{{listOfData.length}} 条，共 \{{total}} 条</div>
     <!-- 右 -->
     <nz-pagination [(nzPageIndex)]="pageNumber" [nzSize]="'small'" [(nzPageSize)]="pageSize"
-        [nzPageSizeOptions]="[30, 50, 100]" [nzTotal]="total||1" (nzPageIndexChange)='refreshData()'
+        [nzPageSizeOptions]="[30, 50, 100]" [nzTotal]="total||0" (nzPageIndexChange)='refreshData()'
         (nzPageSizeChange)='refreshData(true)' nzShowSizeChanger nzShowQuickJumper></nz-pagination>
 </ng-template>
 
- {{#if (or buttons.hasAddButton table.hasEditButton)}}
+{{#if table.hasEnhanceTable}}
+<ng-template #exampleTpl let-rowData>
+    <div [ngClass]="{
+                    'cur-pointer': true,
+                    'text-warning': rowData.status === null,
+                    'text-success': rowData.status === 1,
+                    'text-error': rowData.status === 2
+                }" (click)="approveDetail(rowData)">
+        <ng-container [ngSwitch]="rowData.status">
+
+        </ng-container>
+    </div>
+</ng-template>
+<!-- 操作区 -->
+<ng-template #buttonTpl let-rowData>
+    {{#if table.hasEditButton}}
+    <a (click)="handleEdit(rowData)" class="right8">编辑</a>
+    {{/if}}
+    {{#if table.hasDeleteButton}}
+    <a nz-popconfirm nzPopconfirmTitle="您确定删除当前数据吗？" (nzOnConfirm)="handleDelete(rowData)"
+        nzPopconfirmPlacement="top">删除</a>
+    {{/if}}
+</ng-template>
+{{/if}}
+
+{{#if (or buttons.hasAddButton table.hasEditButton)}}
 <!-- 新增/编辑drawer -->
 <nz-drawer nzWrapClassName="ny-drawer" [nzBodyStyle]="{ height: 'calc(100% - 55px)', overflow: 'auto', 'padding-bottom': '53px'}"
     [nzWidth]="1200" [nzVisible]="nyDrawerShow" [nzTitle]="drawerName" (nzOnClose)="closeDrawer()"
@@ -177,6 +254,7 @@
     </ng-container>
 </nz-drawer>
 {{/if}}
+{{#if buttons.hasImportButton}}
 <!-- 导入 -->
 <!-- <yzf-property-upload #uploadComponent
     [importUrl]="importData.url"
@@ -184,4 +262,4 @@
     [importMethods]="importData.importMethods"
 >
 </yzf-property-upload> -->
-
+{{/if}}

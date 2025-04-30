@@ -1,12 +1,21 @@
 {{! 基础组件模板 }}
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, TemplateRef, ViewChild } from '@angular/core';
 import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService, NzModalRef } from 'ng-zorro-antd/modal';
 import { Debounce } from 'lodash-decorators';
 import { cloneDeep } from 'lodash-es';
 import dayjs from 'dayjs';
-
+{{#if table.hasEnhanceTable}}
+import { GetRowIdParams, ICellRendererParams, ValueFormatterParams } from 'ag-grid-community';
+import { 
+    EnhanceTableComponent, 
+    ColumnButtonRendererComponent, 
+    LongTextCellRendererComponent, 
+    TemplateCellRendererComponent, 
+    ColConfig, ColField, Formatters 
+} from '@/app/components/enhance-table/enhance-table.module';
+{{/if}}
 import { winResizeChange } from 'src/app/utils/decorators';
 import { GlobalService } from 'src/app/services';
 {{#if buttons.hasImportButton}}
@@ -14,7 +23,7 @@ import { TaskAssignmentRespDTO, ImportType } from '@/app/types/tax-fcs/import/ta
 import { taskObservable } from '@/app/utils/observableList';
 {{/if}}
 import { {{pascalCase moduleName}}Service } from '../{{moduleName}}.service';
-import { Examples } from '../{{moduleName}}.const';
+import { Examples {{#if buttons.hasImportButton}}, ImportMethods {{/if}}, arrayToMap } from '../{{moduleName}}.const';
 
 @winResizeChange
 @Component({
@@ -23,7 +32,10 @@ import { Examples } from '../{{moduleName}}.const';
   styleUrls: ['./{{componentName}}.component.less']
 })
 export class {{pascalCase componentName}}Component implements OnInit, AfterViewInit, OnDestroy {
-
+{{#if table.hasEnhanceTable}}
+    @ViewChild('exampleTpl', { static: false }) exampleTpl: TemplateRef<any>;
+    @ViewChild('buttonTpl', { static: false }) buttonTpl: TemplateRef<any>;
+{{/if}}
     innerPageH = 800; // 内页高度
     tableHeight = 500; // 表格高度
 {{#if filters.hasDateFilter}}
@@ -35,8 +47,10 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     allCorporationList: any[] = [];
     corporationTree: any[] = []; // 集团公司树
     selectedCorporationTree: any[] = []; // 集团公司树
+{{/if}}
+{{#if (or filters.hasCompanyFilter buttons.hasBatchFilterButton)}}
     corporationValue: string[] = []; // 选中的集团公司
-    companyIds = [];
+    companyIds: any[] = [];
 {{/if}}
     {{camelCase componentName}}CodeOrName = '';
 {{#if filters.hasAdvancedFilter}}
@@ -44,8 +58,9 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     queryParmetes = {
       exampleFilter: null,
     };
-    searchNum = 0;
     isOpenSearch = false;
+    {{#if (eq filters.advancedFilterType 'legacy')}}
+    searchNum = 0;
     filterBadgeObj = {
         exampleFilter: {
             type: 'select',
@@ -54,20 +69,157 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             condition: cloneDeep(Examples)
         },
     };
+    {{else if (eq filters.advancedFilterType 'new')}}
+    filterBadgeObj = [
+        {
+            title: "示例",
+            keyName: "exampleFilter",
+            type: "select", 
+            options: cloneDeep(Examples),
+            keyValue: null,
+        },
+    ];
+    {{/if}}
 {{/if}}
+
     // 表格
     listOfData: any[] = [];
     pageNumber = 1;
     pageSize = 30;
     total = 0;
     tableLoading = false;
+{{#if table.hasEnhanceTable}}
+    {{#if table.hasSelection}}
+    /** 确定每一行数据唯一性的字段 */
+    getRowId = (params: GetRowIdParams) => params.data.id + '-' + params.data.companyId;
+    {{/if}}
+    private enhanceTable: EnhanceTableComponent;
+    public columnDefs: ColConfig[] = [];
+    public baseColumnDefs: ColConfig[] = [
+    {{#if table.hasSelection}}
+        {
+            field: ColField.SELECT,
+            headerName: '选择',
+            checkboxSelection: true,
+            headerCheckboxSelection: true,
+            showDisabledCheckboxes: true,
+            pinned: 'left',
+            lockPosition: true,
+            width: 50,
+            resizable: false,
+        },
+    {{/if}}
+        {
+            field: 'companyCode',
+            headerName: '企业编码',
+            width: 120,
+            pinned: 'left',
+        },
+        {
+            field: 'companyName',
+            headerName: '企业名称',
+            tooltipField: 'companyName',
+            width: 200,
+            pinned: 'left',
+            cellRendererSelector: (rp: ICellRendererParams) => {
+                return {
+                    component: LongTextCellRendererComponent,
+                    params: {
+                        content: rp.value,
+                        taxlayerType: rp.data.taxlayerType || rp.data.taxLayerType,
+                        enableCopyIcon: true,
+                    }
+                };
+            }
+        },
+        {
+            field: 'exampleName',
+            headerName: '示例名称',
+            tooltipField: 'exampleName',
+            width: 120,
+            minWidth: 120,
+            valueFormatter: Formatters.PlainText(),
+        },
+        {
+            field: 'exampleEnumCode',
+            headerName: '示例枚举名称',
+            width: 150,
+            minWidth: 120,
+            align: 'right',
+            valueFormatter: Formatters.LabelValue(Examples),
+        },
+        {
+            field: 'exampleNumber',
+            headerName: '示例数字/金额名称',
+            width: 120,
+            minWidth: 120,
+            align: 'right',
+            valueFormatter: Formatters.Number(),
+        },
+        {
+            field: 'exampleDate',
+            headerName: '示例日期',
+            width: 120,
+            minWidth: 120,
+            valueFormatter: Formatters.Date(),
+        },
+        {
+            field: 'exampleTemplateRef',
+            headerName: '示例模板',
+            width: 120,
+            minWidth: 120,
+            cellRendererSelector: (rp: ICellRendererParams) => {
+                return {
+                    component: TemplateCellRendererComponent,
+                    params: {
+                        content: this.exampleTpl,
+                        contentParams: {
+                            rowData: rp.data
+                        }
+                    },
+                };
+            }
+        },
+        {
+            field: 'exampleValueFormatter',
+            headerName: '示例自定义格式化',
+            width: 120,
+            minWidth: 120,
+            valueFormatter: (params: ValueFormatterParams) => {
+                return params.value + ' 自定义格式化';
+            },
+        },
+        {
+            field: 'operation',
+            headerName: '操作',
+            width: 240,
+            minWidth: 160,
+            pinned: 'right',
+            disabled: false,
+            cellRendererSelector: (rp: ICellRendererParams) => {
+                return {
+                    component: ColumnButtonRendererComponent,
+                    params: {
+                        buttons: this.buttonTpl,
+                        buttonParams: {
+                            rowData: rp.data
+                        }
+                    },
+                };
+            }
+        },
+    ]
+{{/if}}
 {{#if table.hasSelection}}
+    {{#unless table.hasEnhanceTable}}
     isIndeterminate = false;
     mapOfCheckedId: { [key: string]: boolean } = {};
     isAllDataChecked: boolean;
+    {{/unless}}
     checkedRows: any[] = [];
 {{/if}}
 {{#if (or buttons.hasAddButton table.hasEditButton)}}
+    // 弹窗
     nyDrawerShow = false;
     drawerName = '';
     infoData = null;
@@ -87,10 +239,10 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     importVisible: boolean;
     private importSubscription: Subscription;
 {{/if}}
-
+    exampleMap = arrayToMap(Examples)
 
     constructor(
-        private globalService: GlobalService,
+        public globalService: GlobalService,
         private modalService: NzModalService,
         private message: NzMessageService,
         private service: {{pascalCase moduleName}}Service,
@@ -161,6 +313,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
       this.isOpenSearch = !this.isOpenSearch;
       this.ngAfterViewInit();
     }
+    {{#if (eq filters.advancedFilterType 'legacy')}}
     selectChange(obj) {
       for (const key of Object.keys(this.queryParmetes)) {
         this.queryParmetes[key] = obj[key] ? obj[key].value : null;
@@ -168,6 +321,25 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
       this.searchNum = Object.keys(obj).length;
       this.refreshData(true);
     }
+    {{else if (eq filters.advancedFilterType 'new')}}
+    @Debounce(500)
+    advancedfilterChange(conditons: any[]) {
+        console.log('conditons:', conditons);
+        conditons.forEach(conditon => {
+            this.queryParmetes[conditon.keyName] = conditon.keyValue;
+            const filterCondition = this.filterBadgeObj.find(item => item.keyName === conditon.keyName);
+            if (filterCondition) {
+                filterCondition.keyValue = conditon.keyValue;
+            }
+        })
+        this.ngAfterViewInit();
+        this.refreshData(true);
+
+    }
+    filterBoxSizeChange() {
+        this.ngAfterViewInit();
+    }
+    {{/if}}
 {{/if}}
     @Debounce(500)
     keyupSearchFunc(e) {
@@ -186,6 +358,13 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
                 this.allCorporationList = res.result || [];
             }
         });
+    }
+{{/if}}
+{{#if buttons.hasBatchFilterButton}}
+    onBatchSelectChange(data: any) {
+        this.corporationValue = data.map(item => item.companyId);
+        this.companyIds = this.corporationValue;
+        this.getTableData(true);
     }
 {{/if}}
     // 获取列表数据
@@ -216,15 +395,31 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             this.tableLoading = false;
         });
     }
-
+{{#if table.hasEnhanceTable}}
+    onGridReady(enhanceTableComponent: EnhanceTableComponent) {
+        this.enhanceTable = enhanceTableComponent;
+        this.columnDefs = cloneDeep(this.baseColumnDefs);
+        // this.getTableHeader();
+    }
+{{/if}}
+{{#if (and table.hasEnhanceTable table.hasSelection)}}
+    onSelectionChanged(selectedRows: any[]) {
+        this.checkedRows = selectedRows;
+    }
+{{/if}}
     // 更新数据
     refreshData(isFirst: boolean = false): void {
     {{#if table.hasSelection}}
+        {{#if table.hasEnhanceTable}}
+        this.enhanceTable?.clearSelection();
+        {{else}}
         this.clearTableChecked();
+        {{/if}}
     {{/if}}
         this.getTableData(isFirst);
     }
 {{#if table.hasSelection}}
+    {{#unless table.hasEnhanceTable}}
     // 全选id
     checkAll(value: boolean): void {
         this.listOfData.forEach(item => (this.mapOfCheckedId[item.companyId + item.id] = value));
@@ -245,6 +440,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         this.checkedRows = [];
         this.mapOfCheckedId = {};
     }
+    {{/unless}}
 {{/if}}
 {{#if buttons.hasAddButton}}
     handleAdd() {
@@ -264,6 +460,10 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{/if}}
 {{#if (and table.hasSelection buttons.hasDeleteButton)}}
     handleBatchDelete() {
+        if (this.checkedRows.length === 0) {
+            this.message.warning('请选择要删除的数据');
+            return;
+        }
         const params = {
             ids: this.checkedRows.map(item => item.id),
             tenantId: this.globalService.userData.tenantId,
@@ -321,7 +521,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     }
     batchExport(badgeAnimation) {
         if (this.checkedRows.length === 0) {
-            this.message.warning('请选择数据');
+            this.message.warning('请选择要导出的数据');
             return;
         }
         this.message.info('正在导出中!');

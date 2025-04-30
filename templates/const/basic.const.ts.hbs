@@ -1,4 +1,31 @@
 export const Examples = [
-    { label: 'example1', value: '0' },
-    { label: 'example12', value: '1' }
+    { label: 'example1', value: 0 },
+    { label: 'example2', value: 1 }
 ];
+{{#if buttons.hasImportButton}}
+export const ImportMethods = [
+    { 
+        value: 'INSERT', 
+        name: '新增',
+    },
+    { 
+        value: 'COVER', 
+        name: '覆盖',
+    },
+    { 
+        value: 'INSERT_AND_COVER', 
+        name: '新增且覆盖',
+    },
+]
+{{/if}}
+
+// 工具函数：将数组转换为键值对对象
+export function arrayToMap<T extends { label: string; value: any }>(arr: T[]): { [key: number]: string } {
+    return arr.reduce((acc, curr) => {
+        acc[curr.value] = curr.label;
+        return acc;
+    }, {});
+}
+
+// 转换后的映射对象
+export const ExampleMap = arrayToMap(Examples);

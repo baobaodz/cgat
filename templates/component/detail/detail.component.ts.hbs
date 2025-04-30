@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output, OnDestroy, AfterViewInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { NzModalService } from 'ng-zorro-antd/modal';
 import dayjs from 'dayjs';
 import { FormCustomValidators } from '@/app/utils/formValidator';
 import { GlobalService } from 'src/app/services';
 import { {{pascalCase moduleName}}Service } from '../../{{moduleName}}.service';
+import { Examples } from '../../{{moduleName}}.const';
 
 
 
@@ -15,120 +15,116 @@ import { {{pascalCase moduleName}}Service } from '../../{{moduleName}}.service';
     styleUrls: ['./{{componentName}}-detail.component.less']
 })
 export class {{pascalCase componentName}}DetailComponent implements OnInit, OnDestroy {
-  @Input() data;
-  @Input() type;
-  @Input() companyList = [];
-  @Output() successInfo = new EventEmitter<string>();
-  validateForm: UntypedFormGroup;
-  formLayout = {
-      itemSpan: 8,
-      labelSpan: 9,
-      controlSpan: 15
-  }
-  areas = [];
+    @Input() data;
+    @Input() type;
+    @Input() companyList = [];
+    @Output() successInfo = new EventEmitter<string>();
+    validateForm: UntypedFormGroup;
+    formLayout = {
+        itemSpan: 8,
+        labelSpan: 9,
+        controlSpan: 15
+    }
+    btnLoading = false;
+    isDetailGetting = false;
+    examples = Examples;
+    {{camelCase componentName}}Detail: any;    
+    constructor(
+        private fb: UntypedFormBuilder,
+        private globalService: GlobalService,
+        private message: NzMessageService,
+        private service: {{pascalCase moduleName}}Service,
+    ) { 
+        this.initForm();    
+    }
+    ngOnInit() {
+        if (this.type !== 'add') {
+            this.get{{pascalCase componentName}}Detail();
+        }   
+        if (this.type === 'add') {  
 
-  btnLoading = false;
-  {{pascalCase componentName}}Detail: any;
-
-  constructor(
-      private fb: UntypedFormBuilder,
-      private globalService: GlobalService,
-      private message: NzMessageService,
-      private service: {{pascalCase moduleName}}Service,
-  ) {
-
-      this.initForm();
-
-
-  }
-  ngOnInit() {
-      if (this.type !== 'add') {
-          this.get{{pascalCase componentName}}Detail();
-          this.validateForm.controls.estateCode.disable();
-
-      }
-
-      if (this.type === 'add') {
-
-      }
-  }
-  ngOnDestroy() {
-
-  }
-  initForm() {
-      const controlsConfig = {
-          companyId: [null, [Validators.required]],
-          estateCode: [null, [Validators.required, Validators.maxLength(100)]],
-          estateName: [null, [Validators.maxLength(100)]],
-          estatePropertyArea: [null, [Validators.required, FormCustomValidators.number]],
-          estatePropertyNumber: [null, [Validators.required, Validators.maxLength(100)]],
-          acquisitionTime: [null, [Validators.required]],
-      };
-      this.validateForm = this.fb.group(controlsConfig);
-  }
-  get{{pascalCase componentName}}Detail() {
-      this.service.get{{pascalCase componentName}}Detail(this.data.id).then((res: any) => {
-          this.{{pascalCase componentName}}Detail = res;
-          const formData = res;
-          this.validateForm.reset(formData);
-      });
-  }
-  companyChange(value) {
-
-  }
-  dateChange(value: Date) {
-      const date = dayjs(value).endOf('month').toDate();
-      if (dayjs(value).diff(date)) {
-          this.validateForm.controls.acquisitionTime.setValue(date);
-      }
-  }
-  validate() {
-      for (const key in this.validateForm.controls) {
-          if (this.validateForm.controls.hasOwnProperty(key)) {
-              this.validateForm.controls[key].markAsDirty();
-              this.validateForm.controls[key].updateValueAndValidity();
-          }
-      }
-      return this.validateForm.valid;
-  }
-  submit() {
-      if (!this.validate()) {
-          return;
-      }
-      console.log(this.validateForm.getRawValue());
-      const values: any = this.validateForm.getRawValue(); // 获取包含disabled的所有表单值
-      const params: any = {
-          ...values,
-          userId: this.globalService.userData.userId,
-          tenantId: this.globalService.userData.tenantId
-      };
-      this.btnLoading = true;
-      if (this.type === 'add') {
-          this.service.add{{pascalCase componentName}}(params).then(res => {
-              this.message.success('新增成功！');
-              this.successInfo.emit('successAdd');
-          }).finally(() => {
-              this.btnLoading = false;
-          });
-      } else {
-          params.id = this.data.id;
-          this.service.update{{pascalCase componentName}}(params).then(res => {
-              this.message.success('修改成功！');
-              this.successInfo.emit('success');
-          }).finally(() => {
-              this.btnLoading = false;
-          })
-      }
-  }
-  cancel() {
-      this.successInfo.emit('cancel');
-  }
-  trimValue(event, name) {
-      const _target = event.target;
-      const value = _target.value.trim();
-      this.validateForm.get(name).setValue(value);
-  }
-  isEmpty(data: any): boolean {
-      return data === '' || data === undefined || data === null;
-  }
+        }
+    }
+    ngOnDestroy() { 
+    }
+    initForm() {
+        const controlsConfig = {
+            companyId: [null, [Validators.required]],
+            exampleInputText: [null, [Validators.required, Validators.maxLength(100)]], // 示例输入框
+            exampleSelect: [null], // 示例下拉框
+            exampleInputNumber: [null, [Validators.required, FormCustomValidators.number]], // 示例输入数字
+            exampleDate: [null, [Validators.required]], // 示例日期
+        };
+        this.validateForm = this.fb.group(controlsConfig);
+    }
+    get{{pascalCase componentName}}Detail() {
+        this.isDetailGetting = true;
+        this.service.get{{pascalCase componentName}}Detail(this.data.id).then((res: any) => {
+            this.{{camelCase componentName}}Detail = res;
+            const formData = res;
+            this.validateForm.reset(formData);
+        }).finally(() => {
+        this.isDetailGetting = false;
+        });
+    }
+    companyChange(value) {  
+    }
+    dateChange(value: Date) {
+        const date = dayjs(value).endOf('month').toDate();
+        if (dayjs(value).diff(date)) {
+            this.validateForm.controls.acquisitionTime.setValue(date);
+        }
+    }
+    exampleSelectChange(value) {
+        
+    }
+    validate() {
+        for (const key in this.validateForm.controls) {
+            if (this.validateForm.controls.hasOwnProperty(key)) {
+                this.validateForm.controls[key].markAsDirty();
+                this.validateForm.controls[key].updateValueAndValidity();
+            }
+        }
+        return this.validateForm.valid;
+    }
+    submit() {
+        if (!this.validate()) {
+            return;
+        }
+        console.log(this.validateForm.getRawValue());
+        const values: any = this.validateForm.getRawValue(); // 获取包含disabled的所有表单值
+        const params: any = {
+            ...values,
+            userId: this.globalService.userData.userId,
+            tenantId: this.globalService.userData.tenantId
+        };
+        this.btnLoading = true;
+        if (this.type === 'add') {
+            this.service.add{{pascalCase componentName}}(params).then(res => {
+                this.message.success('新增成功！');
+                this.successInfo.emit('successAdd');
+            }).finally(() => {
+                this.btnLoading = false;
+            });
+        } else {
+            params.id = this.data.id;
+            this.service.update{{pascalCase componentName}}(params).then(res => {
+                this.message.success('修改成功！');
+                this.successInfo.emit('success');
+            }).finally(() => {
+                this.btnLoading = false;
+            })
+        }
+    }
+    cancel() {
+        this.successInfo.emit('cancel');
+    }
+    trimValue(event, name) {
+        const _target = event.target;
+        const value = _target.value.trim();
+        this.validateForm.get(name).setValue(value);
+    }
+    isEmpty(data: any): boolean {
+        return data === '' || data === undefined || data === null;
+    }
 }
