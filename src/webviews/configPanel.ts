@@ -329,28 +329,31 @@ export class ConfigPanel {
             try {
               // 修改这里，接收更详细的生成结果
               const result = await generator.generate(config);
-              
-              // 显示主要成功消息
-              vscode.window.showInformationMessage(`组件 ${message.componentName} 生成成功!`);
-              
+
               // 根据结果显示详细信息
               setTimeout(() => {
+                // 显示主要成功消息
+                vscode.window.showInformationMessage(`组件 ${message.componentName} 生成成功!`);
+
                 if (result.moduleUpdated) {
-                  vscode.window.showInformationMessage(`组件在 ${this._existingModuleName}.module.ts 中声明成功!`);
+                  setTimeout(() => {
+                    vscode.window.showInformationMessage(`组件在 ${this._existingModuleName}.module.ts 中声明成功!`);
+                  }, 300);
                 }
-                
+
                 if (result.routingUpdated) {
                   setTimeout(() => {
                     vscode.window.showInformationMessage(`组件在 ${this._existingModuleName}-routing.module.ts 中路由声明成功!`);
-                  }, 300);
+                  }, 400);
                 }
-                
+
                 if (result.serviceUpdated) {
+                  
                   setTimeout(() => {
                     vscode.window.showInformationMessage(`组件相关接口在 ${this._existingModuleName}.service.ts 中更新成功!`);
-                  }, 600);
+                  }, 700);
                 }
-              }, 300);
+              }, 200);
             } catch (error: any) {
               vscode.window.showErrorMessage(`组件生成失败: ${error.message}`);
             }

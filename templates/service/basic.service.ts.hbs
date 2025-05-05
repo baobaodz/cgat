@@ -48,7 +48,7 @@ export class {{pascalCase moduleName}}Service {
     delete{{pascalCase componentName}}(id) {
         const url = `${this.prefix}/{{moduleName}}/{{componentName}}/delete/${id}`;
         return this.ajax.request(url, {
-            method: 'delete',
+            method: 'post',
         });
     }
     {{/if}}

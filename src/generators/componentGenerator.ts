@@ -255,6 +255,7 @@ export class ComponentGenerator extends BaseGenerator {
       createdFiles.push(outputPath);
     }
     result.files = createdFiles;
+    console.log('🚀 -> ComponentGenerator -> generate -> result:', result);
     return result;
   }
 
