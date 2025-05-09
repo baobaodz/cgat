@@ -1,6 +1,6 @@
 <div class="{{selectorPrefix}}-{{componentName}}-detail-container">
-    <form nz-form [formGroup]="validateForm">
-        <nz-spin [nzSpinning]="isDetailGetting">
+    <nz-spin [nzSpinning]="isDetailGetting">
+        <form nz-form [formGroup]="validateForm">
             <ny-panel-box [title]="'基本信息'">
                 <div nz-row [nzGutter]="24">
                     <div nz-col [nzSpan]="formLayout.itemSpan">
@@ -31,7 +31,7 @@
                         <nz-form-item>
                             <nz-form-label [nzSpan]="formLayout.labelSpan">示例下拉框</nz-form-label>
                             <nz-form-control [nzSpan]="formLayout.controlSpan">
-                                <nz-select formControlName="exampleSelect" (ngModelChange)="exampleSelectChange()">
+                                <nz-select formControlName="exampleSelect" (ngModelChange)="exampleSelectChange($event)">
                                     <nz-option *ngFor="let item of examples" [nzValue]="item.value" [nzLabel]="item.label"></nz-option>
                                 </nz-select>
                             </nz-form-control>
@@ -64,8 +64,8 @@
                     </div>
                 </div>
             </ny-panel-box>
-        </nz-spin>
-    </form>
+        </form>
+    </nz-spin>
 
     <div class="footer" *ngIf="type !== 'view'">
         <button nz-button nzType="default" (click)="cancel()" style="margin-right: 16px;">取消</button>

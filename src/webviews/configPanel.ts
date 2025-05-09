@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { getUri } from '../utilities/webviewUtils';
 import { ComponentGenerator } from '../generators/componentGenerator';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export interface ConfigPanelOptions {
   targetPath?: string;
@@ -320,39 +322,81 @@ export class ConfigPanel {
               vscode.window.showErrorMessage('请输入组件名称');
               return;
             }
+            
+            // 保存配置
             await vscode.workspace.getConfiguration('cgat').update(
               'componentConfig',
               config,
               vscode.ConfigurationTarget.Global
             );
-            const generator = new ComponentGenerator(context, this._targetPath, this._existingModulePath);
-            try {
-              // 修改这里，接收更详细的生成结果
-              const result = await generator.generate(config);
-
-              // 根据结果显示详细信息
-              setTimeout(() => {
-                // 显示主要成功消息
-                vscode.window.showInformationMessage(`组件 ${message.componentName} 生成成功!`);
-
-                if (result.moduleUpdated) {
-                  setTimeout(() => {
-                    vscode.window.showInformationMessage(`组件在 ${this._existingModuleName}.module.ts 中声明成功!`);
-                  }, 300);
-                }
-
-                if (result.routingUpdated) {
-                  setTimeout(() => {
-                    vscode.window.showInformationMessage(`组件在 ${this._existingModuleName}-routing.module.ts 中路由声明成功!`);
-                  }, 400);
-                }
-
-                if (result.serviceUpdated) {
+            
+            // 检查目标路径是否已经存在模块文件
+            let existingModulePath = this._existingModulePath;
+            const moduleName = message.moduleName || message.componentName;
+            
+            if (config.pre.generateModule) {
+              const potentialModulePath = path.join(this._targetPath, `${moduleName}/${moduleName}.module.ts`);
+              
+              // 使用fs模块检查文件是否存在
+              if (fs.existsSync(potentialModulePath)) {
+                // 如果模块文件已存在，询问用户是否要使用现有模块
+                const useExisting = await vscode.window.showInformationMessage(
+                  `检测到目标路径已存在模块 ${moduleName}.module.ts，是否使用现有模块？`,
+                  '使用现有模块', '重新生成'
+                );
+                
+                if (useExisting === '使用现有模块') {
+                  // 更新配置，使用现有模块
+                  config.pre.generateModule = false;
+                  existingModulePath = potentialModulePath;
+                  this._existingModulePath = potentialModulePath;
+                  console.log('🚀 -> this._existingModulePath:', this._existingModulePath);
                   
-                  setTimeout(() => {
-                    vscode.window.showInformationMessage(`组件相关接口在 ${this._existingModuleName}.service.ts 中更新成功!`);
-                  }, 700);
+                  // 更新模块名称
+                  const pathParts = potentialModulePath.replace(/\\/g, '/').split('/');
+                  this._existingModuleName = pathParts[pathParts.length - 1].replace('.module.ts', '');
+                  console.log('🚀 -> this._existingModuleName:', this._existingModuleName);
+                  
+                  // 重要：更新目标路径为模块所在目录，确保组件生成在正确位置
+                  this._targetPath = path.dirname(potentialModulePath);
+                  console.log('🚀 -> Updated targetPath:', this._targetPath);
                 }
+              }
+            } else if (existingModulePath) {
+              // 如果用户选择使用现有模块但没有通过上面的检测流程
+              // 确保目标路径是模块所在目录
+              this._targetPath = path.dirname(existingModulePath);
+              console.log('🚀 -> Using existing module path as target:', this._targetPath);
+            }
+            
+            // 创建生成器实例，传入可能更新后的existingModulePath
+            const generator = new ComponentGenerator(context, this._targetPath, existingModulePath);
+            
+            try {
+              // 接收生成结果
+              const result = await generator.generate(config);
+              
+              // 获取模块名称（无论是新生成的还是现有的）
+              const displayModuleName = config.pre.generateModule 
+                ? moduleName 
+                : this._existingModuleName;
+
+              // 显示主要成功消息
+              setTimeout(() => {
+                vscode.window.showInformationMessage(`组件 ${message.componentName} 生成成功!`);
+                
+                // 统一显示模块相关消息
+                setTimeout(() => {
+                  vscode.window.showInformationMessage(`组件在 ${displayModuleName}.module.ts 中声明成功!`);
+                }, 300);
+                
+                setTimeout(() => {
+                  vscode.window.showInformationMessage(`组件在 ${displayModuleName}-routing.module.ts 中路由声明成功!`);
+                }, 400);
+                
+                setTimeout(() => {
+                  vscode.window.showInformationMessage(`组件相关接口在 ${displayModuleName}.service.ts 中更新成功!`);
+                }, 700);
               }, 200);
             } catch (error: any) {
               vscode.window.showErrorMessage(`组件生成失败: ${error.message}`);

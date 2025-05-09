@@ -64,7 +64,7 @@ export class {{pascalCase componentName}}DetailComponent implements OnInit, OnDe
             const formData = res;
             this.validateForm.reset(formData);
         }).finally(() => {
-        this.isDetailGetting = false;
+            this.isDetailGetting = false;
         });
     }
     companyChange(value) {  
