@@ -27,9 +27,9 @@ import { Examples {{#if buttons.hasImportButton}}, ImportMethods {{/if}}, arrayT
 
 @winResizeChange
 @Component({
-  selector: '{{selectorPrefix}}-{{componentName}}',
-  templateUrl: './{{componentName}}.component.html',
-  styleUrls: ['./{{componentName}}.component.less']
+    selector: '{{selectorPrefix}}-{{componentName}}',
+    templateUrl: './{{componentName}}.component.html',
+    styleUrls: ['./{{componentName}}.component.less']
 })
 export class {{pascalCase componentName}}Component implements OnInit, AfterViewInit, OnDestroy {
 {{#if table.hasEnhanceTable}}
@@ -39,7 +39,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     innerPageH = 800; // 内页高度
     tableHeight = 500; // 表格高度
 {{#if filters.hasDateFilter}}
-    date: any;
+    date: Date;
     startDate = null;
 {{/if}}
 {{#if filters.hasCompanyFilter}}
@@ -228,11 +228,12 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{#if buttons.hasImportButton}}
     // 导入
     importData = {
-        url: '/example/import',
+        url: '/{{camelCase componentName}}/import',
         template: {
             name: 'xxx模板',
-            type: 'TAX_COMMON_PROPERTY_BASE_INFO_TEMPLATE',
+            type: '{{upperSnakeCase componentName}}_TEMPLATE',
         },
+        uploadType: 'UPLOAD_OTHER', // 上传类型
         importMethods: ImportMethods
 
     }
@@ -310,16 +311,25 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{/if}}
 {{#if filters.hasAdvancedFilter}}
     seniorSearch() {
-      this.isOpenSearch = !this.isOpenSearch;
-      this.ngAfterViewInit();
+        this.isOpenSearch = !this.isOpenSearch;
+        this.ngAfterViewInit();
     }
     {{#if (eq filters.advancedFilterType 'legacy')}}
     selectChange(obj) {
-      for (const key of Object.keys(this.queryParmetes)) {
-        this.queryParmetes[key] = obj[key] ? obj[key].value : null;
-      }
-      this.searchNum = Object.keys(obj).length;
-      this.refreshData(true);
+        for (const key of Object.keys(this.filterBadgeObj)) {
+              if (key === 'dateRange') {
+                  this.queryParmetes['xxxStartDate'] = obj[key] ? dayjs(obj[key].value[0]).format('YYYY-MM-DD') : null;
+                  this.queryParmetes['xxxEndDate'] = obj[key] ? dayjs(obj[key].value[1]).format('YYYY-MM-DD') : null;
+              } else {
+                  if (Array.isArray(obj[key])) {
+                      this.queryParmetes[key] = obj[key] ? obj[key].map(item => item.value) : null;
+                  } else {
+                      this.queryParmetes[key] = obj[key] ? obj[key].value : null;
+                  }
+              }
+        }
+        this.searchNum = Object.keys(obj).length;
+        this.refreshData(true);
     }
     {{else if (eq filters.advancedFilterType 'new')}}
     @Debounce(500)
@@ -374,6 +384,9 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         }
         this.tableLoading = true;
         const params = {
+        {{#if filters.hasDateFilter}}
+            period: this.date ? dayjs(this.date).format('YYYY-MM') : null,
+        {{/if}}
         {{#if filters.hasCompanyFilter}}
             companyIds: this.companyIds,
         {{/if}}
@@ -392,6 +405,11 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             this.listOfData = [];
             this.total = 0;
         }).finally(() => {
+        {{#if table.hasSelection}}
+            {{#unless table.hasEnhanceTable}}
+            this.refreshStatus();
+            {{/unless}}
+        {{/if}}
             this.tableLoading = false;
         });
     }
@@ -428,7 +446,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 
     // 选中表格数据
     refreshStatus(): void {
-        this.isAllDataChecked = this.listOfData.every(item => this.mapOfCheckedId[item.companyId + item.id]);
+        this.isAllDataChecked = this.listOfData.length > 0 && this.listOfData.every(item => this.mapOfCheckedId[item.companyId + item.id]);
         this.isIndeterminate = this.listOfData.some(item => this.mapOfCheckedId[item.companyId + item.id]) && !this.isAllDataChecked;
         this.checkedRows = this.listOfData.filter(item => this.mapOfCheckedId[item.companyId + item.id]);
     }

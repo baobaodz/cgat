@@ -10,6 +10,11 @@ Handlebars.registerHelper('pascalCase', (str) => pascalCase(str));
 Handlebars.registerHelper('camelCase', (str) => camelCase(str));
 // 连字符命名（kebab-case），如：'helloWorld' -> 'hello-world'
 Handlebars.registerHelper('paramCase', (str) => paramCase(str));
+// 大写加下划线命名（UPPER_SNAKE_CASE），如：'helloWorld' -> 'HELLO_WORLD'
+Handlebars.registerHelper('upperSnakeCase', (str) => {
+  const kebabCase = paramCase(str);
+  return kebabCase.replace(/-/g, '_').toUpperCase();
+});
 
 Handlebars.registerHelper('or', function() {
   return Array.prototype.slice.call(arguments, 0, -1).some(Boolean);

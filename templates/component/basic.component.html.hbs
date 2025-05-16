@@ -141,7 +141,7 @@
                 <th nzWidth="300px" nzLeft>企业名称</th>
                 {{/if}}
                 <th nzWidth="150px">示例文本</th>
-                <th nzWidth="150px" align="right">示例数字</th>
+                <th nzWidth="150px" nzAlign="right">示例数字</th>
                 <th nzWidth="150px">示例枚举名称</th>
                 <th nzWidth="170px" nzRight="0px" style="min-width: 170px;">操作</th>
             </tr>
@@ -149,11 +149,11 @@
         <tbody>
             <tr *ngFor="let item of fixedTable.data">
                 {{#if table.hasSelection}}
-                <td nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center"
+                <td nzLeft nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center"
                     [(nzChecked)]="mapOfCheckedId[item.companyId + item.id]" (nzCheckedChange)="refreshStatus()"></td>
                 {{/if}}
                 {{#if filters.hasCompanyFilter}}
-                <td nzLeft="0px" [title]="item.companyCode">
+                <td nzLeft [title]="item.companyCode">
                     <div class="text-nowrap">
                         \{{item.companyCode}}
                     </div>
@@ -174,7 +174,7 @@
                         \{{item.exampleText}}
                     </div>
                 </td>
-                <td [title]="item.exampleNumber" align="right">
+                <td [title]="item.exampleNumber" nzAlign="right">
                     <div class="text-nowrap">
                         \{{item.exampleNumber | number:'1.2-2'}}
                     </div>
@@ -198,7 +198,7 @@
     </nz-table>
     
     <ng-template #listEmpty>
-        <ny-nodata [nzStyle]="{ height: tableHeight-34 + 'px' }"></ny-nodata>
+        <ny-nodata [nzStyle]="{ height: tableHeight + 'px' }"></ny-nodata>
     </ng-template>
     {{/if}}
 </ng-template>
