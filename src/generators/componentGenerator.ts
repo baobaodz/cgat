@@ -197,6 +197,7 @@ export class ComponentGenerator extends BaseGenerator {
       selectorPrefix: config.basic.selectorPrefix,
       generateModule: config.pre.generateModule,
       moduleName: moduleName, // 使用正确的模块名称
+      businessName: config.basic.businessName,
       filters: config.filters,
       buttons: config.buttons,
       detail: config.detail,
@@ -246,7 +247,6 @@ export class ComponentGenerator extends BaseGenerator {
     const createdFiles = [];
     for (const file of files) {
       const outputPath = path.join(this.targetPath, file.output);
-      console.log('🚀 -> ComponentGenerator -> generate -> outputPath:', outputPath);
       await this.generateFile(
         this.getTemplatePath(file.template),
         outputPath,
@@ -255,7 +255,6 @@ export class ComponentGenerator extends BaseGenerator {
       createdFiles.push(outputPath);
     }
     result.files = createdFiles;
-    console.log('🚀 -> ComponentGenerator -> generate -> result:', result);
     return result;
   }
 
@@ -316,7 +315,7 @@ export class ComponentGenerator extends BaseGenerator {
     delete${pascalCase(componentName)}(id) {
         const url = \`\${this.prefix}/${moduleName}/${paramCase(componentName)}/delete/\${id}\`;
         return this.ajax.request(url, {
-            method: 'delete',
+            method: 'post',
         });
     }`;
       }

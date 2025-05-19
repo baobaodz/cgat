@@ -67,13 +67,11 @@ export class {{pascalCase componentName}}DetailComponent implements OnInit, OnDe
             this.isDetailGetting = false;
         });
     }
-    companyChange(value) {  
+    companyChange(value) {
+
     }
     dateChange(value: Date) {
-        const date = dayjs(value).endOf('month').toDate();
-        if (dayjs(value).diff(date)) {
-            this.validateForm.controls.acquisitionTime.setValue(date);
-        }
+
     }
     exampleSelectChange(value) {
         

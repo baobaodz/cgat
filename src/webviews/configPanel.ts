@@ -78,6 +78,10 @@ export class ConfigPanel {
                   <input type="text" name="componentName" required />
                 </div>
                 <div class="form-group">
+                  <label>业务名称：</label>
+                  <input type="text" name="businessName" />
+                </div>
+                <div class="form-group">
                   <label>选择器前缀：</label>
                   <input type="text" name="selectorPrefix" value="yzf" />
                 </div>
@@ -266,7 +270,8 @@ export class ConfigPanel {
           },
           basic: {
             componentName: message.componentName,
-            selectorPrefix: message.selectorPrefix
+            selectorPrefix: message.selectorPrefix,
+            businessName: message.businessName || '',
           },
           filters: {
             hasCompanyFilter: message.hasCompanyFilter === 'on',

@@ -1,4 +1,5 @@
 
+{{#if businessName}}<!-- {{businessName}}页面 -->{{/if}}
 <ny-page-box [pageHeader]="pageHeader" [pageBody]="pageBody" [pageFooter]="pageFooter"
     [nzStyle]="{ height: innerPageH + 'px' }"></ny-page-box>
 
@@ -138,7 +139,7 @@
                 {{/if}}
                 {{#if filters.hasCompanyFilter}}
                 <th nzWidth="120px" nzLeft>企业编号</th>
-                <th nzWidth="300px" nzLeft>企业名称</th>
+                <th nzWidth="260px" nzLeft>企业名称</th>
                 {{/if}}
                 <th nzWidth="150px">示例文本</th>
                 <th nzWidth="150px" nzAlign="right">示例数字</th>

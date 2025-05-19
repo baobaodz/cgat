@@ -1,4 +1,3 @@
-{{! 基础组件模板 }}
 import { Component, OnInit, AfterViewInit, OnDestroy, TemplateRef, ViewChild } from '@angular/core';
 import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -24,6 +23,7 @@ import { taskObservable } from '@/app/utils/observableList';
 {{/if}}
 import { {{pascalCase moduleName}}Service } from '../{{moduleName}}.service';
 import { Examples {{#if buttons.hasImportButton}}, ImportMethods {{/if}}, arrayToMap } from '../{{moduleName}}.const';
+
 
 @winResizeChange
 @Component({
@@ -119,7 +119,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             field: 'companyName',
             headerName: '企业名称',
             tooltipField: 'companyName',
-            width: 200,
+            width: 260,
             pinned: 'left',
             cellRendererSelector: (rp: ICellRendererParams) => {
                 return {
@@ -230,7 +230,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     importData = {
         url: '/{{camelCase componentName}}/import',
         template: {
-            name: 'xxx模板',
+            name: '{{#if businessName}}{{businessName}}{{else}}xxx{{/if}}导入模板',
             type: '{{upperSnakeCase componentName}}_TEMPLATE',
         },
         uploadType: 'UPLOAD_OTHER', // 上传类型
@@ -462,7 +462,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{/if}}
 {{#if buttons.hasAddButton}}
     handleAdd() {
-        this.drawerName = '新增';
+        this.drawerName = '新增{{#if businessName}}{{businessName}}{{/if}}';
         this.infoData = null;
         this.infoType = 'add';
         this.nyDrawerShow = true;
@@ -470,7 +470,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{/if}}
 {{#if table.hasEditButton}}
     handleEdit(data) {
-        this.drawerName = '编辑';
+        this.drawerName = '编辑{{#if businessName}}{{businessName}}{{/if}}';
         this.infoData = data;
         this.infoType = 'edit';
         this.nyDrawerShow = true;
