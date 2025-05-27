@@ -3,7 +3,7 @@ import { SharedModule } from 'src/app/shared';
 
 import { {{pascalCase moduleName}}RoutingModule } from './{{moduleName}}-routing.module';
 import { {{pascalCase componentName}}Component } from './{{componentName}}/{{componentName}}.component';
-{{#if (or buttons.hasAddButton buttons.hasEditButton)}}
+{{#if (or buttons.hasAddButton table.hasEditButton table.hasViewButton)}}
 import { {{pascalCase componentName}}DetailComponent } from './{{componentName}}/detail/{{componentName}}-detail.component';
 {{/if}}
 
@@ -11,7 +11,7 @@ import { {{pascalCase componentName}}DetailComponent } from './{{componentName}}
 @NgModule({
     declarations: [
         {{pascalCase componentName}}Component,
-      {{#if (or buttons.hasAddButton buttons.hasEditButton)}}
+      {{#if (or buttons.hasAddButton table.hasEditButton table.hasViewButton)}}
         {{pascalCase componentName}}DetailComponent
       {{/if}}
     ],

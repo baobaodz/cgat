@@ -25,6 +25,9 @@ Handlebars.registerHelper('and', function() {
 Handlebars.registerHelper('eq', function (a, b) {
   return a === b;
 });
+Handlebars.registerHelper('not', function (a, b) {
+  return a !== b;
+});
 export abstract class BaseGenerator {
   constructor(protected context: vscode.ExtensionContext) {
 

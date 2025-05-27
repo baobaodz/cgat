@@ -18,15 +18,15 @@ export class {{pascalCase moduleName}}Service {
             params: params
         });
     }
-
+    {{#if (or table.hasEditButton table.hasViewButton)}}
     get{{pascalCase componentName}}Detail(id) {
         const url = `${this.prefix}/{{moduleName}}/{{componentName}}/detail/${id}`;
         return this.ajax.request(url, {
             method: 'get',
         });
     }
-    
-    {{#if (or buttons.hasAddButton table.hasEditButton)}}
+    {{/if}}
+    {{#if buttons.hasAddButton}}
     add{{pascalCase componentName}}(params: any) {
         const url = `${this.prefix}/{{moduleName}}/{{componentName}}/add`;
         return this.ajax.request(url, {
@@ -34,7 +34,8 @@ export class {{pascalCase moduleName}}Service {
             params: params
         });
     }
-    
+    {{/if}}
+    {{#if table.hasEditButton}}
     update{{pascalCase componentName}}(params: any) {
         const url = `${this.prefix}/{{moduleName}}/{{componentName}}/update`;
         return this.ajax.request(url, {

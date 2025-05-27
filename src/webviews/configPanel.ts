@@ -209,6 +209,10 @@ export class ConfigPanel {
                         <input type="checkbox" name="hasTableDeleteButton" checked />
                         <label>启用删除按钮</label>
                       </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasTableViewButton" checked />
+                        <label>启用详情按钮</label>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -290,7 +294,8 @@ export class ConfigPanel {
             hasEnhanceTable: message.hasEnhanceTable === 'on',
             hasSelection: message.hasTableSelection === 'on',
             hasEditButton: message.hasTableEditButton === 'on',
-            hasDeleteButton: message.hasTableDeleteButton === 'on'
+            hasDeleteButton: message.hasTableDeleteButton === 'on',
+            hasViewButton: message.hasTableViewButton === 'on'
           },
           detail: {
             type: message.detailType,

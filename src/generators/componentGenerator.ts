@@ -161,10 +161,10 @@ export class ComponentGenerator extends BaseGenerator {
       moduleName = path.basename(this.existingModulePath, '.module.ts');
 
       // 更新现有模块
-      const hasDetailComponent = config.buttons.hasAddButton || config.table.hasEditButton;
+      const hasDetailComponent = config.buttons.hasAddButton || config.table.hasEditButton || config.table.hasViewButton;
       const moduleUpdated = await this.updateExistingModule(
         this.existingModulePath,
-        config.basic.componentName,
+        paramCase(config.basic.componentName),
         hasDetailComponent
       );
       result.moduleUpdated = moduleUpdated;
@@ -173,7 +173,7 @@ export class ComponentGenerator extends BaseGenerator {
       if (this.existingRoutingModulePath) {
         const routingUpdated = await this.updateExistingRoutingModule(
           this.existingRoutingModulePath,
-          config.basic.componentName,
+          paramCase(config.basic.componentName),
           moduleName
         );
         result.routingUpdated = routingUpdated;
@@ -183,7 +183,7 @@ export class ComponentGenerator extends BaseGenerator {
       if (this.existingServicePath) {
         const serviceUpdated = await this.updateExistingService(
           this.existingServicePath,
-          config.basic.componentName,
+          paramCase(config.basic.componentName),
           moduleName,
           config
         );
@@ -288,7 +288,7 @@ export class ComponentGenerator extends BaseGenerator {
 
       // 根据配置添加其他方法
       // 如果有新增/编辑按钮，添加新增和更新方法
-      if (config.buttons.hasAddButton || config.table.hasEditButton) {
+      if (config.buttons.hasAddButton || config.table.hasEditButton || config.table.hasViewButton) {
         newMethods += `
   
     add${pascalCase(componentName)}(params: any) {

@@ -218,7 +218,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     {{/unless}}
     checkedRows: any[] = [];
 {{/if}}
-{{#if (or buttons.hasAddButton table.hasEditButton)}}
+{{#if (or buttons.hasAddButton table.hasEditButton table.hasViewButton)}}
     // 弹窗
     nyDrawerShow = false;
     drawerName = '';
@@ -377,15 +377,12 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         this.getTableData(true);
     }
 {{/if}}
-    // 获取列表数据
-    getTableData(isFirst: boolean = false) {
-        if (isFirst) {
-            this.pageNumber = 1;
-        }
-        this.tableLoading = true;
-        const params = {
+    getQueryObj() {
+        const queryObj = {
         {{#if filters.hasDateFilter}}
             period: this.date ? dayjs(this.date).format('YYYY-MM') : null,
+            accountingYear: this.date ? dayjs(this.date).year() : null,
+            accountingMonth: this.date ? dayjs(this.date).month() + 1 : null,
         {{/if}}
         {{#if filters.hasCompanyFilter}}
             companyIds: this.companyIds,
@@ -393,11 +390,21 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         {{#if filters.hasAdvancedFilter}}
             ...this.queryParmetes,
         {{/if}}
-            pageNumber: this.pageNumber,
-            pageSize: this.pageSize,
             tenantId: this.globalService.userData.tenantId,
             userId: this.globalService.userData.userId,
         };
+        return queryObj;
+    }
+    // 获取列表数据
+    getTableData(isFirst: boolean = false) {
+        if (isFirst) {
+            this.pageNumber = 1;
+        }
+        this.tableLoading = true;
+        const params = Object.assign({}, this.getQueryObj(), {
+            pageNumber: this.pageNumber,
+            pageSize: this.pageSize,
+        });
         this.service.get{{pascalCase componentName}}List(params).then(result => {
             this.listOfData = result.list || [];
             this.total = result.total;
@@ -476,6 +483,14 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         this.nyDrawerShow = true;
     }
 {{/if}}
+{{#if table.hasViewButton}}
+    handleView(data) {
+        this.drawerName = '详情';
+        this.infoData = data;
+        this.infoType = 'view';
+        this.nyDrawerShow = true;
+    }
+{{/if}}
 {{#if (and table.hasSelection buttons.hasDeleteButton)}}
     handleBatchDelete() {
         if (this.checkedRows.length === 0) {
@@ -503,7 +518,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     }
 
 {{/if}}
-{{#if (or buttons.hasAddButton table.hasEditButton)}}
+{{#if (or buttons.hasAddButton table.hasEditButton table.hasViewButton)}}
     closeDrawer() {
         this.nyDrawerShow = false;
     }
@@ -525,16 +540,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     allExport(badgeAnimation) {
         this.message.info('正在导出中!');
         badgeAnimation.onStart(badgeAnimation);
-        const params = {
-        {{#if filters.hasCompanyFilter}}
-            companyIds: this.companyIds,
-        {{/if}}
-        {{#if filters.hasAdvancedFilter}}
-            ...this.queryParmetes,
-        {{/if}}
-            tenantId: this.globalService.userData.tenantId,
-            userId: this.globalService.userData.userId,
-        };
+        const params = Object.assign({}, this.getQueryObj());
         this.service.exportAll{{pascalCase componentName}}(params);
     }
     batchExport(badgeAnimation) {
@@ -544,17 +550,10 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         }
         this.message.info('正在导出中!');
         badgeAnimation.onStart(badgeAnimation);
-        const params = {
-        {{#if filters.hasCompanyFilter}}
-            companyIds: this.companyIds,
-        {{/if}}
-        {{#if filters.hasAdvancedFilter}}
-            ...this.queryParmetes,
-        {{/if}}
-            tenantId: this.globalService.userData.tenantId,
-            userId: this.globalService.userData.userId,
+        const params = Object.assign({}, this.getQueryObj(), {
             ids: this.checkedRows.map(row => row.id)
-        };
+        });
+        const params = {
         this.service.exportSelect{{pascalCase componentName}}(params);
     }
 {{/if}}

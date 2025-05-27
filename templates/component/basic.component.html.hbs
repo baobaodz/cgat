@@ -8,6 +8,14 @@
     <div class="clearfix">
         <!-- 左侧筛选区 -->
         <div class="f-l">
+            {{#if (eq filters.advancedFilterType 'new')}}
+            <div class="search-item">
+                <button class="ant-btn-icon-only" nz-button nzType="default" style="min-width: 32px; margin-left: 0"
+                    (click)="refreshData()">
+                    <i nz-icon nzType="redo" nzTheme="outline"></i>
+                </button>
+            </div>
+            {{/if}}
             {{#if filters.hasDateFilter}}
             <div class="search-item">
               <nz-month-picker [(ngModel)]="date" [nzAllowClear]="false" nzFormat="yyyy年MM期"
@@ -58,12 +66,14 @@
             {{/if}}
 
             {{/if}}
+            {{#if (not filters.advancedFilterType 'new')}}
             <div class="search-item">
               <button class="ant-btn-icon-only" nz-button nzType="default" style="min-width: 32px; margin-left: 0;"
                   (click)="getTableData()">
                   <i nz-icon nzType="redo" nzTheme="outline"></i>
               </button>
-          </div>
+            </div>
+            {{/if}}
         </div>
         <!-- 右侧操作区 -->
         <div class="f-r">
@@ -92,17 +102,17 @@
             </yzf-badge-animation>
             {{/if}}
         </div>
-        {{#if (and filters.hasAdvancedFilter (eq filters.advancedFilterType 'new'))}}
-        <yzf-filter-box
-            [conditions]="filterBadgeObj"
-            [isOpen]="isOpenSearch"
-            (valueChanged)="advancedfilterChange($event)"
-            (moreClickChanged)="filterBoxSizeChange()"
-        >
-        </yzf-filter-box>
-        {{/if}}
     </div>
-    {{#if filters.hasAdvancedFilter}}
+    {{#if (and filters.hasAdvancedFilter (eq filters.advancedFilterType 'new'))}}
+    <yzf-filter-box
+        [conditions]="filterBadgeObj"
+        [isOpen]="isOpenSearch"
+        (valueChanged)="advancedfilterChange($event)"
+        (moreClickChanged)="filterBoxSizeChange()"
+    >
+    </yzf-filter-box>
+    {{/if}}
+    {{#if (and filters.hasAdvancedFilter (eq filters.advancedFilterType 'legacy'))}}
     <div [class.show-search]="!isOpenSearch">
         <yzf-filter-badge [filterBadgeObj]="filterBadgeObj" [debounce]="500" (selectChange)="selectChange($event)">
         </yzf-filter-badge>
@@ -160,6 +170,12 @@
                     </div>
                 </td>
                 <td nzLeft [title]="item.companyName">
+                    <div class="icon-taxLayerType">
+                        <i *ngIf="data.taxlayerType === '001'" class="icon" nz-icon [nzIconfont]="'YDSZyibannashuiren'">
+                        </i>
+                        <i *ngIf="data.taxlayerType === '101'" class="icon" nz-icon [nzIconfont]="'YDSZxiaoguimonashuiren'">
+                        </i>
+                    </div>
                     <div *ngIf="item.companyName" class="nowrap-company-ellipsis">
                         <div class="text-nowrap">
                             \{{item.companyName.slice(0, -8) }}
@@ -167,6 +183,11 @@
                         <div class="text-nowrap-noellipsis">
                             \{{item.companyName.slice(-8) }}
                         </div>
+                    </div>
+                    <div class="icon-fuzhi-wrapper">
+                        <i class="icon icon-fuzhi" nz-icon [nzIconfont]="'YDSZfuzhi1'" nz-tooltip nzTooltipTitle="复制"
+                            [yzfCopyText]="data.companyName">
+                        </i>
                     </div>
                 </td>
                 {{/if}}
@@ -187,11 +208,14 @@
                 </td>
                 <td nzRight="0px" style="min-width: 170px;">
                     {{#if table.hasEditButton}}
-                    <a (click)="handleEdit(item)">编辑</a>
+                    <a (click)="handleEdit(item)" class="right8">编辑</a>
+                    {{/if}}
+                    {{#if table.hasViewButton}}
+                    <a (click)="handleView(item)" class="right8">详情</a>
                     {{/if}}
                     {{#if table.hasDeleteButton}}
                     <a nz-popconfirm nzPopconfirmTitle="您确定删除当前数据吗？" (nzOnConfirm)="handleDelete(item)"
-                        nzPopconfirmPlacement="top" class="left16">删除</a>
+                        nzPopconfirmPlacement="top" class="right8">删除</a>
                     {{/if}}
                 </td>
             </tr>
@@ -239,8 +263,8 @@
 </ng-template>
 {{/if}}
 
-{{#if (or buttons.hasAddButton table.hasEditButton)}}
-<!-- 新增/编辑drawer -->
+{{#if (or buttons.hasAddButton table.hasEditButton table.hasViewButton)}}
+<!-- 新增/编辑/详情drawer -->
 <nz-drawer nzWrapClassName="ny-drawer" [nzBodyStyle]="{ height: 'calc(100% - 55px)', overflow: 'auto', 'padding-bottom': '53px'}"
     [nzWidth]="1200" [nzVisible]="nyDrawerShow" [nzTitle]="drawerName" (nzOnClose)="closeDrawer()"
     ignoreClass="ny-drawer,ignore-btn,ant-select-dropdown-menu-item">
@@ -249,7 +273,9 @@
             *ngIf="nyDrawerShow"
             [data]="infoData"
             [type]="infoType"
+            {{#if filters.hasCompanyFilter}}
             [companyList]="allCorporationList"
+            {{/if}}
             (successInfo)="successEvent($event)"
         ></{{selectorPrefix}}-{{componentName}}-detail>
     </ng-container>
