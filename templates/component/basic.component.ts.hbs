@@ -240,7 +240,10 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     importVisible: boolean;
     private importSubscription: Subscription;
 {{/if}}
-    exampleMap = arrayToMap(Examples)
+    exampleMap = arrayToMap(Examples);
+{{#if table.hasPolling}}
+    refreshInterval;
+{{/if}}
 
     constructor(
         public globalService: GlobalService,
@@ -397,6 +400,12 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     }
     // 获取列表数据
     getTableData(isFirst: boolean = false) {
+    {{#if table.hasPolling}}
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
+    {{/if}}
         if (isFirst) {
             this.pageNumber = 1;
         }
@@ -406,8 +415,13 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             pageSize: this.pageSize,
         });
         this.service.get{{pascalCase componentName}}List(params).then(result => {
-            this.listOfData = result.list || [];
+            this.listOfData = result.data || [];
             this.total = result.total;
+        {{#if table.hasPolling}}
+            if (this.needPolling(this.listOfData)) {
+                this.refreshListInterval();
+            }
+        {{/if}}
         }).catch(() => {
             this.listOfData = [];
             this.total = 0;
@@ -420,6 +434,34 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             this.tableLoading = false;
         });
     }
+{{#if table.hasPolling}}
+    refreshListInterval() {
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
+        const params = Object.assign({}, this.getQueryObj(), {
+            pageNumber: this.pageNumber,
+            pageSize: this.pageSize,
+        });
+
+        this.refreshInterval = setInterval(() => {
+            this.service.get{{pascalCase componentName}}List(params).then(result => {
+                this.listOfData = result.data || [];
+                this.total = result.total;
+                if (this.needPolling(this.listOfData)) {
+                    this.refreshListInterval();
+                }
+            }).catch(() => {
+                this.listOfData = [];
+                this.total = 0;
+            })
+        }, 5000);
+    }
+    needPolling(data: any[]): boolean {
+        return data.some(item => [item.xxxStatus].includes(1));
+    }
+{{/if}}
 {{#if table.hasEnhanceTable}}
     onGridReady(enhanceTableComponent: EnhanceTableComponent) {
         this.enhanceTable = enhanceTableComponent;

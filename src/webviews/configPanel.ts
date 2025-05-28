@@ -105,11 +105,11 @@ export class ConfigPanel {
                     <div class="section tab-section">
                       <div class="form-group">
                         <input type="checkbox" name="hasCompanyFilter" checked />
-                        <label>启用企业筛选</label>
+                        <label>企业筛选</label>
                       </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasDateFilter" checked/>
-                        <label>启用日期筛选</label>
+                        <label>日期筛选</label>
                       </div>
                       
                       <!-- 改进的高级筛选部分 -->
@@ -117,7 +117,7 @@ export class ConfigPanel {
                         <div class="filter-header">
                           <div class="form-group">
                             <input type="checkbox" name="hasAdvancedFilter" checked id="hasAdvancedFilter"/>
-                            <label>启用高级筛选</label>
+                            <label>高级筛选</label>
                           </div>
                         </div>
                         
@@ -147,23 +147,23 @@ export class ConfigPanel {
                     <div class="section tab-section">
                       <div class="form-group">
                         <input type="checkbox" name="hasAddButton" checked onchange="toggleDetailConfig()" />
-                        <label>启用新增按钮</label>
+                        <label>新增</label>
                       </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasDeleteButton" checked />
-                        <label>启用删除按钮</label>
+                        <label>批量删除</label>
                       </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasImportButton" />
-                        <label>启用导入按钮</label>
+                        <label>导入</label>
                       </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasExportButton" />
-                        <label>启用导出按钮</label>
+                        <label>批量导出</label>
                       </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasBatchFilterButton" />
-                        <label>启用批量筛选按钮</label>
+                        <label>批量筛选</label>
                       </div>
                       
                       <div id="detailConfig">
@@ -195,23 +195,27 @@ export class ConfigPanel {
                     <div class="section tab-section">
                       <div class="form-group">
                         <input type="checkbox" name="hasEnhanceTable" />
-                        <label>启用新表格（enhance-table）</label>
+                        <label>新表格（enhance-table）</label>
                       </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasTableSelection" />
-                        <label>启用多选</label>
+                        <label>多选</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasTablePolling" />
+                        <label>列表轮询</label>
                       </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasTableEditButton" checked />
-                        <label>启用编辑按钮</label>
+                        <label>编辑按钮</label>
                       </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasTableDeleteButton" checked />
-                        <label>启用删除按钮</label>
+                        <label>删除按钮</label>
                       </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasTableViewButton" checked />
-                        <label>启用详情按钮</label>
+                        <label>详情按钮</label>
                       </div>
                     </div>
                   </div>
@@ -293,6 +297,7 @@ export class ConfigPanel {
           table: {
             hasEnhanceTable: message.hasEnhanceTable === 'on',
             hasSelection: message.hasTableSelection === 'on',
+            hasPolling: message.hasTablePolling === 'on',
             hasEditButton: message.hasTableEditButton === 'on',
             hasDeleteButton: message.hasTableDeleteButton === 'on',
             hasViewButton: message.hasTableViewButton === 'on'
