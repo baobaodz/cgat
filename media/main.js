@@ -87,7 +87,13 @@
       }, 300);
     }
   }
+  // 添加表格多选选项的显示/隐藏逻辑
+  function toggleTableSelectionOptions() {
+    const crossPageSelection = document.querySelector('.table-selection-option');
+    const hasTableSelection = document.querySelector('input[name="hasTableSelection"]').checked;
 
+    crossPageSelection.style.display = hasTableSelection ? "inline-flex" : "none";
+  }
   // 初始化时执行一次
   document.addEventListener("DOMContentLoaded", function() {
     toggleAdvancedFilterOptions();
@@ -107,6 +113,10 @@
         this.closest('.filter-option-row').classList.add('selected');
       });
     });
+    toggleTableSelectionOptions();
+
+    // 监听表格多选复选框变化
+    document.querySelector('input[name="hasTableSelection"]')?.addEventListener("change", toggleTableSelectionOptions);
   });
 
   document.getElementById("generateComponent").addEventListener("click", () => {

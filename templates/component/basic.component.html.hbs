@@ -35,14 +35,16 @@
                 </yzf-company-select>
             </div>
             {{/if}}
+            {{#if filters.hasInputFilter}}
             <div class="search-item">
                 <nz-input-group nzSearch [nzSuffix]="suffixIconButton">
-                    <input [(ngModel)]="{{camelCase componentName}}CodeOrName" (ngModelChange)="keyupSearchFunc($event.trim())" nz-input placeholder="请输入">
+                    <input [(ngModel)]="{{camelCase componentName}}CodeOrName" (ngModelChange)="keyupSearchFunc($event.trim())" nz-input placeholder="请输入名称/编码" />
                 </nz-input-group>
                 <ng-template #suffixIconButton>
                     <em class="search-input"><i nz-icon nzType="search"></i></em>
                 </ng-template>
             </div>
+            {{/if}}
             {{#if filters.hasAdvancedFilter}}
             <!-- 高级筛选 -->
             {{#if (eq filters.advancedFilterType 'legacy')}}
@@ -91,6 +93,12 @@
             <button nz-button nzType="default" (click.once)="doUpload()">导入</button>
             {{/if}}
             {{#if buttons.hasExportButton}}
+            {{#if table.hasSelection}}
+            {{#if table.hasCrossPageSelection}}
+            <yzf-badge-animation #badgeAnimation>
+                <button nz-button nzType="default" (click)="batchExport(badgeAnimation)">导出</button>
+            </yzf-badge-animation>
+            {{else}}
             <yzf-badge-animation #badgeAnimation>
                 <button nz-button nzType="default" nz-dropdown [nzDropdownMenu]="menu1">导出</button>
                 <nz-dropdown-menu #menu1="nzDropdownMenu">
@@ -100,6 +108,12 @@
                     </ul>
                 </nz-dropdown-menu>
             </yzf-badge-animation>
+            {{/if}}
+            {{else}}
+            <yzf-badge-animation #badgeAnimation>
+                <button nz-button nzType="default" (click)="allExport(badgeAnimation)">导出</button>
+            </yzf-badge-animation>
+            {{/if}}
             {{/if}}
         </div>
     </div>
@@ -142,10 +156,17 @@
         <thead>
             <tr>
                 {{#if table.hasSelection}}
+                {{#if table.hasCrossPageSelection}}
+                <th *ngIf="hasSelection" nzWidth="60px" style="width: 60px; max-width: 60px; min-width: 60px" nzLeft nzAlign="left" nzShowCheckbox
+                    [nzSelections]="listOfSelection" [(nzChecked)]="selectionState.isAllDataChecked" 
+                    [nzIndeterminate]="selectionState.isIndeterminate" (nzCheckedChange)="checkCurrentPage($event)">
+                </th>
+                {{else}}
                 <th nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center" [nzDisabled]="listOfData.length == 0"
                     [(nzChecked)]="isAllDataChecked" [nzIndeterminate]="isIndeterminate"
                     (nzCheckedChange)="checkAll($event)">
                 </th>
+                {{/if}}
                 {{/if}}
                 {{#if filters.hasCompanyFilter}}
                 <th nzWidth="120px" nzLeft>企业编号</th>
@@ -158,30 +179,37 @@
             </tr>
         </thead>
         <tbody>
-            <tr *ngFor="let item of fixedTable.data">
+            <tr *ngFor="let data of fixedTable.data">
                 {{#if table.hasSelection}}
+                {{#if table.hasCrossPageSelection}}
+                <td *ngIf="hasSelection" nzLeft style="width: 60px; max-width: 60px; min-width: 60px" nzShowCheckbox nzAlign="left"
+                    [(nzChecked)]="selectionState.mapOfCheckedId[getRowKey(data)]"
+                    [nzIndeterminate]="selectionState.indeterminate[getRowKey(data)]"
+                    (nzCheckedChange)="onItemChecked(getRowKey(data), $event)"></td>
+                {{else}}
                 <td nzLeft nzWidth="60px" nzLeft nzShowCheckbox nzAlign="center"
-                    [(nzChecked)]="mapOfCheckedId[item.companyId + item.id]" (nzCheckedChange)="refreshStatus()"></td>
+                    [(nzChecked)]="mapOfCheckedId[getRowKey(data)]" (nzCheckedChange)="refreshStatus()"></td>
+                {{/if}}
                 {{/if}}
                 {{#if filters.hasCompanyFilter}}
-                <td nzLeft [title]="item.companyCode">
+                <td nzLeft [title]="data.companyCode">
                     <div class="text-nowrap">
-                        \{{item.companyCode}}
+                        \{{data.companyCode}}
                     </div>
                 </td>
-                <td nzLeft [title]="item.companyName">
+                <td nzLeft [title]="data.companyName">
                     <div class="icon-taxLayerType">
                         <i *ngIf="data.taxlayerType === '001'" class="icon" nz-icon [nzIconfont]="'YDSZyibannashuiren'">
                         </i>
                         <i *ngIf="data.taxlayerType === '101'" class="icon" nz-icon [nzIconfont]="'YDSZxiaoguimonashuiren'">
                         </i>
                     </div>
-                    <div *ngIf="item.companyName" class="nowrap-company-ellipsis">
+                    <div *ngIf="data.companyName" class="nowrap-company-ellipsis">
                         <div class="text-nowrap">
-                            \{{item.companyName.slice(0, -8) }}
+                            \{{data.companyName.slice(0, -8) }}
                         </div>
                         <div class="text-nowrap-noellipsis">
-                            \{{item.companyName.slice(-8) }}
+                            \{{data.companyName.slice(-8) }}
                         </div>
                     </div>
                     <div class="icon-fuzhi-wrapper">
@@ -191,30 +219,30 @@
                     </div>
                 </td>
                 {{/if}}
-                <td [title]="item.exampleText">
+                <td [title]="data.exampleText">
                     <div class="text-nowrap">
-                        \{{item.exampleText}}
+                        \{{data.exampleText}}
                     </div>
                 </td>
-                <td [title]="item.exampleNumber" nzAlign="right">
+                <td [title]="data.exampleNumber" nzAlign="right">
                     <div class="text-nowrap">
-                        \{{item.exampleNumber | number:'1.2-2'}}
+                        \{{data.exampleNumber | number:'1.2-2'}}
                     </div>
                 </td>
-                <td [title]="item.exampleEnum">
+                <td [title]="data.exampleEnum">
                     <div class="text-nowrap">
-                        \{{exampleMap[item.exampleEnum] | nullReplace }}
+                        \{{exampleMap[data.exampleEnum] | nullReplace }}
                     </div>
                 </td>
                 <td nzRight="0px" style="min-width: 170px;">
                     {{#if table.hasEditButton}}
-                    <a (click)="handleEdit(item)" class="right8">编辑</a>
+                    <a (click)="handleEdit(data)" class="right8">编辑</a>
                     {{/if}}
                     {{#if table.hasViewButton}}
-                    <a (click)="handleView(item)" class="right8">详情</a>
+                    <a (click)="handleView(data)" class="right8">详情</a>
                     {{/if}}
                     {{#if table.hasDeleteButton}}
-                    <a nz-popconfirm nzPopconfirmTitle="您确定删除当前数据吗？" (nzOnConfirm)="handleDelete(item)"
+                    <a nz-popconfirm nzPopconfirmTitle="您确定删除当前数据吗？" (nzOnConfirm)="handleDelete(data)"
                         nzPopconfirmPlacement="top" class="right8">删除</a>
                     {{/if}}
                 </td>
@@ -230,15 +258,40 @@
 
 <!-- 分页 -->
 <ng-template #pageFooter>
+    {{#if (and table.hasSelection table.hasCrossPageSelection)}}
+    <!-- 左 -->
+    <div class="showTotal">
+        <span *ngIf="selectedCount > 0">已选择 \{{selectedCount}} 条，</span>
+        <span *ngIf="selectedCount === 0">显示 \{{listOfData.length}} 条，</span>
+        <span>共 \{{total}} 条</span>
+    </div>
+    <!-- 右 -->
+    <nz-pagination [(nzPageIndex)]="pageNumber" [nzSize]="'small'" [(nzPageSize)]="pageSize"
+        [nzPageSizeOptions]="[30, 50, 100]" [nzTotal]="total||0" (nzPageIndexChange)="refreshData(false, false)"
+        (nzPageSizeChange)="refreshData(true, false)" nzShowSizeChanger nzShowQuickJumper></nz-pagination>
+    {{else}}
     <!-- 左 -->
     <div class="showTotal">显示 \{{listOfData.length}} 条，共 \{{total}} 条</div>
     <!-- 右 -->
     <nz-pagination [(nzPageIndex)]="pageNumber" [nzSize]="'small'" [(nzPageSize)]="pageSize"
-        [nzPageSizeOptions]="[30, 50, 100]" [nzTotal]="total||0" (nzPageIndexChange)='refreshData()'
-        (nzPageSizeChange)='refreshData(true)' nzShowSizeChanger nzShowQuickJumper></nz-pagination>
+        [nzPageSizeOptions]="[30, 50, 100]" [nzTotal]="total||0" (nzPageIndexChange)="refreshData()"
+        (nzPageSizeChange)="refreshData(true)" nzShowSizeChanger nzShowQuickJumper></nz-pagination>
+    {{/if}}
 </ng-template>
 
 {{#if table.hasEnhanceTable}}
+{{#if table.hasCrossPageSelection}}
+<ng-template #selectionDropdownTpl>
+    <a nz-dropdown [nzDropdownMenu]="menu">
+        <span nz-icon nzType="down"></span>
+    </a>
+    <nz-dropdown-menu #menu="nzDropdownMenu">
+        <ul nz-menu>
+            <li *ngFor="let item of listOfSelection" nz-menu-item (click)="item.onSelect()">{{item.text}}</li>
+        </ul>
+    </nz-dropdown-menu>
+</ng-template>
+{{/if}}
 <ng-template #exampleTpl let-rowData>
     <div [ngClass]="{
                     'cur-pointer': true,

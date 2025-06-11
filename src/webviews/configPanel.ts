@@ -112,7 +112,12 @@ export class ConfigPanel {
                         <label>日期筛选</label>
                       </div>
                       
-                      <!-- 改进的高级筛选部分 -->
+                      <div class="form-group">
+                        <input type="checkbox" name="hasInputFilter"/>
+                        <label>输入筛选</label>
+                      </div>
+                      
+                      <!-- 高级筛选部分 -->
                       <div class="filter-group">
                         <div class="filter-header">
                           <div class="form-group">
@@ -201,6 +206,10 @@ export class ConfigPanel {
                         <input type="checkbox" name="hasTableSelection" />
                         <label>多选</label>
                       </div>
+                      <div class="form-group table-selection-option" style="display:none">
+                        <input type="checkbox" name="hasTableCrossPageSelection" />
+                        <label>全页选&跨页选</label>
+                      </div>
                       <div class="form-group">
                         <input type="checkbox" name="hasTablePolling" />
                         <label>列表轮询</label>
@@ -284,6 +293,7 @@ export class ConfigPanel {
           filters: {
             hasCompanyFilter: message.hasCompanyFilter === 'on',
             hasDateFilter: message.hasDateFilter === 'on',
+            hasInputFilter: message.hasInputFilter === 'on',
             hasAdvancedFilter: message.hasAdvancedFilter === 'on',
             advancedFilterType: message.hasAdvancedFilter === 'on' ? message.advancedFilterType : null
           },
@@ -297,6 +307,7 @@ export class ConfigPanel {
           table: {
             hasEnhanceTable: message.hasEnhanceTable === 'on',
             hasSelection: message.hasTableSelection === 'on',
+            hasCrossPageSelection: message.hasTableCrossPageSelection === 'on',
             hasPolling: message.hasTablePolling === 'on',
             hasEditButton: message.hasTableEditButton === 'on',
             hasDeleteButton: message.hasTableDeleteButton === 'on',
@@ -332,7 +343,7 @@ export class ConfigPanel {
             if (!this._targetPath) {
               vscode.window.showErrorMessage('请选择生成路径');
               return;
-            }
+            } 
             if (!message.componentName) {
               vscode.window.showErrorMessage('请输入组件名称');
               return;

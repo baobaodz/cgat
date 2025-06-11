@@ -12,14 +12,26 @@ import {
     ColumnButtonRendererComponent, 
     LongTextCellRendererComponent, 
     TemplateCellRendererComponent, 
+    {{#if (and table.hasSelection table.hasCrossPageSelection)}}
+    TableSelectionManager,
+    EnhanceTableService,
+    {{/if}}
     ColConfig, ColField, Formatters 
 } from '@/app/components/enhance-table/enhance-table.module';
+{{/if}}
+{{#if table.hasCrossPageSelection}}
+import { Throttle } from 'lodash-decorators';
 {{/if}}
 import { winResizeChange } from 'src/app/utils/decorators';
 import { GlobalService } from 'src/app/services';
 {{#if buttons.hasImportButton}}
 import { TaskAssignmentRespDTO, ImportType } from '@/app/types/tax-fcs/import/task-assignment-resp';
 import { taskObservable } from '@/app/utils/observableList';
+{{/if}}
+{{#if (and table.hasSelection table.hasCrossPageSelection)}}
+{{#unless table.hasEnhanceTable}}
+import { TableSelectionService, TableSelectionState } from '@/app/services/table-selection.service';
+{{/unless}}
 {{/if}}
 import { {{pascalCase moduleName}}Service } from '../{{moduleName}}.service';
 import { Examples {{#if buttons.hasImportButton}}, ImportMethods {{/if}}, arrayToMap } from '../{{moduleName}}.const';
@@ -35,6 +47,9 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{#if table.hasEnhanceTable}}
     @ViewChild('exampleTpl', { static: false }) exampleTpl: TemplateRef<any>;
     @ViewChild('buttonTpl', { static: false }) buttonTpl: TemplateRef<any>;
+    {{#if table.hasCrossPageSelection}}
+    @ViewChild('selectionDropdownTpl', { static: false }) selectionDropdownTpl: TemplateRef<any>;
+    {{/if}}
 {{/if}}
     innerPageH = 800; // 内页高度
     tableHeight = 500; // 表格高度
@@ -52,7 +67,9 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     corporationValue: string[] = []; // 选中的集团公司
     companyIds: any[] = [];
 {{/if}}
+{{#if filters.hasInputFilter}}
     {{camelCase componentName}}CodeOrName = '';
+{{/if}}
 {{#if filters.hasAdvancedFilter}}
     // 高级筛选
     queryParmetes = {
@@ -88,10 +105,43 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     pageSize = 30;
     total = 0;
     tableLoading = false;
+{{#if table.hasSelection}}
+    getRowKey = (row)=> `${row.companyId}-${row.id}`;
+    {{#if table.hasCrossPageSelection}}
+    {{#if table.hasEnhanceTable}}
+    selectionManager: TableSelectionManager;
+    {{else}}
+    // 表格选择状态
+    selectionState: TableSelectionState;
+    {{/if}}
+    listOfSelection = [
+        {
+            text: '全选全部页',
+            onSelect: () => {
+                if (this.listOfData.length === 0) return;
+                this.checkAllPages(true);
+            },
+        },
+        {
+            text: '取消全选',
+            onSelect: () => {
+                this.checkAllPages(false);
+            }
+        }
+    ];
+    {{else}}
+    {{#unless table.hasEnhanceTable}}
+    isIndeterminate = false;
+    mapOfCheckedId: { [key: string]: boolean } = {};
+    isAllDataChecked: boolean;
+    {{/unless}}
+    checkedRows: any[] = [];
+    {{/if}}
+{{/if}}
 {{#if table.hasEnhanceTable}}
     {{#if table.hasSelection}}
     /** 确定每一行数据唯一性的字段 */
-    getRowId = (params: GetRowIdParams) => params.data.id + '-' + params.data.companyId;
+    getRowId = (params: GetRowIdParams) => this.getRowKey(params.data);
     {{/if}}
     private enhanceTable: EnhanceTableComponent;
     public columnDefs: ColConfig[] = [];
@@ -107,6 +157,13 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             lockPosition: true,
             width: 50,
             resizable: false,
+            {{#if table.hasCrossPageSelection}}
+            headerComponentParams: {
+                content: () => {
+                    return this.selectionDropdownTpl;
+                }
+            },
+            {{/if}}
         },
     {{/if}}
         {
@@ -210,14 +267,6 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         },
     ]
 {{/if}}
-{{#if table.hasSelection}}
-    {{#unless table.hasEnhanceTable}}
-    isIndeterminate = false;
-    mapOfCheckedId: { [key: string]: boolean } = {};
-    isAllDataChecked: boolean;
-    {{/unless}}
-    checkedRows: any[] = [];
-{{/if}}
 {{#if (or buttons.hasAddButton table.hasEditButton table.hasViewButton)}}
     // 弹窗
     nyDrawerShow = false;
@@ -250,10 +299,26 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         private modalService: NzModalService,
         private message: NzMessageService,
         private service: {{pascalCase moduleName}}Service,
+        {{#if table.hasCrossPageSelection}}
+        {{#if table.hasEnhanceTable}}
+        private enhanceTableService: EnhanceTableService,
+        {{else}}
+        private tableSelectionService: TableSelectionService,
+        {{/if}}
+        {{/if}}
     ) {
     {{#if buttons.hasImportButton}}
         this.handImportListener();
     {{/if}}
+    {{#if (and table.hasSelection table.hasCrossPageSelection)}}
+        {{#if table.hasEnhanceTable}}
+        this.selectionManager = this.enhanceTableService.createSelectionManager(this.getRowKey);
+        {{else}}
+        // 初始化选择状态
+        this.selectionState = this.tableSelectionService.initSelectionState(this.getRowKey);
+        {{/if}}
+    {{/if}}
+
     }
 
     ngOnInit(): void {
@@ -354,10 +419,12 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     }
     {{/if}}
 {{/if}}
+{{#if filters.hasInputFilter}}
     @Debounce(500)
     keyupSearchFunc(e) {
         this.refreshData(true);
     }
+{{/if}}
 {{#if filters.hasCompanyFilter}}
     // 改变选中的集团树
     onTagChange($event: string[]): void {
@@ -384,11 +451,14 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         const queryObj = {
         {{#if filters.hasDateFilter}}
             period: this.date ? dayjs(this.date).format('YYYY-MM') : null,
-            accountingYear: this.date ? dayjs(this.date).year() : null,
-            accountingMonth: this.date ? dayjs(this.date).month() + 1 : null,
+            kjnd: this.date ? dayjs(this.date).year() : null,
+            kjqj: this.date ? dayjs(this.date).month() + 1 : null,
         {{/if}}
         {{#if filters.hasCompanyFilter}}
             companyIds: this.companyIds,
+        {{/if}}
+        {{#if filters.hasInputFilter}}
+            {{camelCase componentName}}CodeOrName: this.{{camelCase componentName}}CodeOrName;
         {{/if}}
         {{#if filters.hasAdvancedFilter}}
             ...this.queryParmetes,
@@ -417,6 +487,15 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         this.service.get{{pascalCase componentName}}List(params).then(result => {
             this.listOfData = result.data || [];
             this.total = result.total;
+        {{#if (and table.hasSelection table.hasCrossPageSelection)}}
+            {{#if table.hasEnhanceTable}}
+            // 恢复选中状态
+            this.selectionManager.setTableSelection(this.enhanceTable);
+            {{else}}
+            // 恢复选中状态
+            this.restoreCheckStatus();
+            {{/if}}
+        {{/if}}
         {{#if table.hasPolling}}
             if (this.needPolling(this.listOfData)) {
                 this.refreshListInterval();
@@ -426,11 +505,6 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             this.listOfData = [];
             this.total = 0;
         }).finally(() => {
-        {{#if table.hasSelection}}
-            {{#unless table.hasEnhanceTable}}
-            this.refreshStatus();
-            {{/unless}}
-        {{/if}}
             this.tableLoading = false;
         });
     }
@@ -449,6 +523,15 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             this.service.get{{pascalCase componentName}}List(params).then(result => {
                 this.listOfData = result.data || [];
                 this.total = result.total;
+            {{#if (and table.hasSelection table.hasCrossPageSelection)}}
+                {{#if table.hasEnhanceTable}}
+                // 恢复选中状态
+                this.selectionManager.setTableSelection(this.enhanceTable);
+                {{else}}
+                // 恢复选中状态
+                this.restoreCheckStatus();
+                {{/if}}
+            {{/if}}
                 if (this.needPolling(this.listOfData)) {
                     this.refreshListInterval();
                 }
@@ -471,9 +554,32 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{/if}}
 {{#if (and table.hasEnhanceTable table.hasSelection)}}
     onSelectionChanged(selectedRows: any[]) {
+        {{#if table.hasCrossPageSelection}}
+        this.selectionManager.handleSelectionChange(selectedRows, this.listOfData);
+        {{else}}
         this.checkedRows = selectedRows;
+        {{/if}}
     }
 {{/if}}
+{{#if table.hasCrossPageSelection}}
+    /**
+     * 刷新数据
+     * @param isFirst 是否回到第一页, 默认不回
+     * @param clearSelection 是否清空勾选状态
+     */
+    refreshData(isFirst: boolean = false, clearSelection: boolean = true): void {
+    {{#if table.hasSelection}}
+        {{#if table.hasEnhanceTable}}
+        if (clearSelection) {
+            this.selectionManager.checkAllPages(false);
+        }
+        {{else}}
+        this.tableSelectionService.handleRefreshData(this.selectionState, this.listOfData, clearSelection);
+        {{/if}}
+    {{/if}}
+        this.getTableData(isFirst);
+    }
+{{else}}
     // 更新数据
     refreshData(isFirst: boolean = false): void {
     {{#if table.hasSelection}}
@@ -485,19 +591,66 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     {{/if}}
         this.getTableData(isFirst);
     }
-{{#if table.hasSelection}}
+{{/if}}
+{{#if table.hasCrossPageSelection}}
+    {{#if table.hasSelection}}
+    {{#if table.hasEnhanceTable}}
+    // 全选所有页
+    checkAllPages(checked: boolean) {
+        this.selectionManager.checkAllPages(checked);
+        if (checked) {
+            this.enhanceTable.batchSetSeletStatus(
+                this.enhanceTable.getAllNodes(),
+                true
+            );
+        } else {
+            this.enhanceTable.clearSelection();
+        }
+    }
+    // 选中数量计算属性
+    @Throttle(1000)
+    get selectedCount(): number {
+        return this.selectionManager.getSelectedCount(this.total);
+    }
+    {{else}}
+    // 恢复选中状态
+    restoreCheckStatus(): void {
+        this.tableSelectionService.restoreCheckStatus(this.selectionState, this.listOfData);
+    }
+    // 全选当前页
+    checkCurrentPage(value: boolean): void {
+        this.tableSelectionService.checkCurrentPage(this.selectionState, value, this.listOfData);
+    }
+    // 单个选择
+    onItemChecked(id: string, checked: boolean): void {
+        this.tableSelectionService.onItemChecked(this.selectionState, id, checked, this.listOfData);
+    }
+    // 全选所有页
+    checkAllPages(value: boolean): void {
+        this.tableSelectionService.checkAllPages(this.selectionState, value, this.listOfData);
+    }
+    // 选中数量计算属性
+    @Throttle(1000)
+    get selectedCount(): number {
+        return this.tableSelectionService.getSelectedCount(this.selectionState, this.total);
+    }
+    {{/if}}
+    {{/if}}
+{{else}}
+
+    {{#if table.hasSelection}}
     {{#unless table.hasEnhanceTable}}
     // 全选id
     checkAll(value: boolean): void {
-        this.listOfData.forEach(item => (this.mapOfCheckedId[item.companyId + item.id] = value));
+        this.listOfData.forEach(item => (this.mapOfCheckedId[this.getRowKey(item)] = value));
         this.refreshStatus();
     }
 
     // 选中表格数据
     refreshStatus(): void {
-        this.isAllDataChecked = this.listOfData.length > 0 && this.listOfData.every(item => this.mapOfCheckedId[item.companyId + item.id]);
-        this.isIndeterminate = this.listOfData.some(item => this.mapOfCheckedId[item.companyId + item.id]) && !this.isAllDataChecked;
-        this.checkedRows = this.listOfData.filter(item => this.mapOfCheckedId[item.companyId + item.id]);
+        this.isAllDataChecked = this.listOfData.length > 0 && this.listOfData.every(item => this.mapOfCheckedId[this.getRowKey(item)]);
+        this.isIndeterminate = this.listOfData.some(item => this.mapOfCheckedId[this.getRowKey(item)]) && !this.isAllDataChecked;
+        this.checkedRows = this.listOfData.filter(item => this.mapOfCheckedId[this.getRowKey(item)]);
     }
 
     // 清除table checked缓存
@@ -508,13 +661,14 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         this.mapOfCheckedId = {};
     }
     {{/unless}}
+    {{/if}}
 {{/if}}
 {{#if buttons.hasAddButton}}
     handleAdd() {
         this.drawerName = '新增{{#if businessName}}{{businessName}}{{/if}}';
         this.infoData = null;
         this.infoType = 'add';
-        this.nyDrawerShow = true;
+        this.nyDrawerShow = true;  
     }
 {{/if}}
 {{#if table.hasEditButton}}
@@ -535,6 +689,24 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{/if}}
 {{#if (and table.hasSelection buttons.hasDeleteButton)}}
     handleBatchDelete() {
+        {{#if table.hasCrossPageSelection}}
+        {{#if table.hasEnhanceTable}}
+        const { allSelected, selectedData, excludeIds } = this.selectionManager.getSelectedRows();
+        {{else}}
+        const { allSelected, selectedData, excludeIds } = this.tableSelectionService.getSelectedRows(this.selectionState);
+        {{/if}}
+        if (selectedData.length === 0) {
+            this.message.warning('请选择要删除的数据');
+            return;
+        }
+        const params = {
+            selectAllFlag: allSelected,
+            excludeIds,
+            ids: allSelected ? [] : selectedData.map(item => item.id),
+            tenantId: this.globalService.userData.tenantId,
+            userId: this.globalService.userData.userId, 
+        }
+        {{else}}
         if (this.checkedRows.length === 0) {
             this.message.warning('请选择要删除的数据');
             return;
@@ -544,6 +716,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
             tenantId: this.globalService.userData.tenantId,
             userId: this.globalService.userData.userId, 
         }
+        {{/if}}
         this.service.delete{{pascalCase componentName}}(params).then(res => {
             this.message.success('删除成功！');
             this.getTableData();
@@ -579,13 +752,31 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{/if}}
 
 {{#if buttons.hasExportButton}}
-    allExport(badgeAnimation) {
+    allExport(badgeAnimation?) {
         this.message.info('正在导出中!');
-        badgeAnimation.onStart(badgeAnimation);
+        badgeAnimation?.onStart(badgeAnimation);
         const params = Object.assign({}, this.getQueryObj());
         this.service.exportAll{{pascalCase componentName}}(params);
     }
     batchExport(badgeAnimation) {
+        {{#if table.hasCrossPageSelection}}
+        {{#if table.hasEnhanceTable}}
+        const { allSelected, selectedData, excludeIds } = this.selectionManager.getSelectedRows();
+        {{else}}
+        const { allSelected, selectedData, excludeIds } = this.tableSelectionService.getSelectedRows(this.selectionState);
+        {{/if}}
+        if (selectedData.length === 0) {
+            this.message.warning('请选择要导出的数据');
+            return;
+        }
+        this.message.info('正在导出中!');
+        badgeAnimation.onStart(badgeAnimation);
+        const params = Object.assign({}, this.getQueryObj(), {
+            selectAllFlag: allSelected,
+            excludeIds,
+            ids: allSelected ? [] : selectedData.map(item => item.id),
+        });
+        {{else}}
         if (this.checkedRows.length === 0) {
             this.message.warning('请选择要导出的数据');
             return;
@@ -595,7 +786,7 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
         const params = Object.assign({}, this.getQueryObj(), {
             ids: this.checkedRows.map(row => row.id)
         });
-        const params = {
+        {{/if}}
         this.service.exportSelect{{pascalCase componentName}}(params);
     }
 {{/if}}
