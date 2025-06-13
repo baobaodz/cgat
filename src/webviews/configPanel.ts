@@ -170,6 +170,10 @@ export class ConfigPanel {
                         <input type="checkbox" name="hasBatchFilterButton" />
                         <label>批量筛选</label>
                       </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasBatchEnableButton" />
+                        <label>批量启用禁用</label>
+                      </div>
                       
                       <div id="detailConfig">
                         <h3>新增/编辑详情配置</h3>
@@ -225,6 +229,10 @@ export class ConfigPanel {
                       <div class="form-group">
                         <input type="checkbox" name="hasTableViewButton" checked />
                         <label>详情按钮</label>
+                      </div>
+                      <div class="form-group">
+                        <input type="checkbox" name="hasTableEnableButton" />
+                        <label>启用禁用按钮</label>
                       </div>
                     </div>
                   </div>
@@ -302,7 +310,8 @@ export class ConfigPanel {
             hasDeleteButton: message.hasDeleteButton === 'on',
             hasImportButton: message.hasImportButton === 'on',
             hasExportButton: message.hasExportButton === 'on',
-            hasBatchFilterButton: message.hasBatchFilterButton === 'on'
+            hasBatchFilterButton: message.hasBatchFilterButton === 'on',
+            hasBatchEnableButton: message.hasBatchEnableButton === 'on',
           },
           table: {
             hasEnhanceTable: message.hasEnhanceTable === 'on',
@@ -311,7 +320,8 @@ export class ConfigPanel {
             hasPolling: message.hasTablePolling === 'on',
             hasEditButton: message.hasTableEditButton === 'on',
             hasDeleteButton: message.hasTableDeleteButton === 'on',
-            hasViewButton: message.hasTableViewButton === 'on'
+            hasViewButton: message.hasTableViewButton === 'on',
+            hasEnableButton: message.hasTableEnableButton === 'on'
           },
           detail: {
             type: message.detailType,
@@ -376,16 +386,13 @@ export class ConfigPanel {
                   config.pre.generateModule = false;
                   existingModulePath = potentialModulePath;
                   this._existingModulePath = potentialModulePath;
-                  console.log('🚀 -> this._existingModulePath:', this._existingModulePath);
                   
                   // 更新模块名称
                   const pathParts = potentialModulePath.replace(/\\/g, '/').split('/');
                   this._existingModuleName = pathParts[pathParts.length - 1].replace('.module.ts', '');
-                  console.log('🚀 -> this._existingModuleName:', this._existingModuleName);
                   
                   // 重要：更新目标路径为模块所在目录，确保组件生成在正确位置
                   this._targetPath = path.dirname(potentialModulePath);
-                  console.log('🚀 -> Updated targetPath:', this._targetPath);
                 }
               }
             } else if (existingModulePath) {
@@ -442,7 +449,6 @@ export class ConfigPanel {
     }
   ) {
     if (ConfigPanel.currentPanel) {
-      console.log('🚀 -> ConfigPanel -> show -> ConfigPanel.currentPanel:', ConfigPanel.currentPanel);
       ConfigPanel.currentPanel._panel.reveal();
       return;
     }

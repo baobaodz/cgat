@@ -34,7 +34,7 @@ import { TableSelectionService, TableSelectionState } from '@/app/services/table
 {{/unless}}
 {{/if}}
 import { {{pascalCase moduleName}}Service } from '../{{moduleName}}.service';
-import { Examples {{#if buttons.hasImportButton}}, ImportMethods {{/if}}, arrayToMap } from '../{{moduleName}}.const';
+import { Examples, {{#if buttons.hasImportButton}}ImportMethods, {{/if}}{{#if (or buttons.hasBatchEnableButton table.hasEnableButton)}}EnableStatusList, {{/if}}arrayToMap } from '../{{moduleName}}.const';
 
 
 @winResizeChange
@@ -289,7 +289,11 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
     importVisible: boolean;
     private importSubscription: Subscription;
 {{/if}}
+    // 常量
     exampleMap = arrayToMap(Examples);
+{{#if (or buttons.hasBatchEnableButton table.hasEnableButton)}}
+    enableStatusMap = arrayToMap(EnableStatusList);
+{{/if}}
 {{#if table.hasPolling}}
     refreshInterval;
 {{/if}}
@@ -726,12 +730,74 @@ export class {{pascalCase componentName}}Component implements OnInit, AfterViewI
 {{/if}}
 {{#if table.hasDeleteButton}}
     handleDelete(data) {
-        this.service.delete{{pascalCase componentName}}(data.id).then(res => {
+        const params = {
+            ids: [data.id],
+            tenantId: this.globalService.userData.tenantId,
+            userId: this.globalService.userData.userId, 
+        }
+        this.service.delete{{pascalCase componentName}}(params).then(res => {
             this.message.success('删除成功！');
             this.getTableData();
         });
     }
 
+{{/if}}
+{{#if buttons.hasBatchEnableButton}}
+    @Debounce(500)
+    handleBatchEnable(enable: boolean) {
+        const enableText = enable ? '启用' : '禁用';
+        {{#if table.hasCrossPageSelection}}
+        {{#if table.hasEnhanceTable}}
+        const { allSelected, selectedData, excludeIds } = this.selectionManager.getSelectedRows();
+        {{else}}
+        const { allSelected, selectedData, excludeIds } = this.tableSelectionService.getSelectedRows(this.selectionState);
+        {{/if}}
+        if (selectedData.length === 0) {
+            this.message.warning(`请选择要${enableText}的数据`);
+            return;
+        }
+        const params = {
+            selectAllFlag: allSelected,
+            excludeIds,
+            ids: allSelected ? [] : selectedData.map(item => item.id),
+            enable: enable ? 1 : 0,
+            tenantId: this.globalService.userData.tenantId,
+            userId: this.globalService.userData.userId, 
+        }
+        {{else}}
+        if (this.checkedRows.length === 0) {
+            this.message.warning(`请选择要${enableText}的数据`);
+            return;
+        }
+        const params = {
+            ids: this.checkedRows.map(item => item.id),
+            enable: enable ? 1 : 0,
+            tenantId: this.globalService.userData.tenantId,
+            userId: this.globalService.userData.userId, 
+        }
+        {{/if}}
+        this.service.enable{{pascalCase componentName}}(params).then(res => {
+            this.message.success(`${enableText}成功！`);
+            this.getTableData();
+        });
+    }
+
+{{/if}}
+{{#if table.hasEnableButton}}
+    @Debounce(500)
+    handleEnable(data, enable: boolean) {
+        const enableText = enable ? '启用' : '禁用';
+        const params = {
+            ids: [data.id],
+            enable: enable ? 1 : 0,
+            tenantId: this.globalService.userData.tenantId,
+            userId: this.globalService.userData.userId, 
+        }
+        this.service.enable{{pascalCase componentName}}(params).then(res => {
+            this.message.success(`${enableText}成功！`);
+            this.getTableData();
+        });
+    }
 {{/if}}
 {{#if (or buttons.hasAddButton table.hasEditButton table.hasViewButton)}}
     closeDrawer() {

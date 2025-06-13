@@ -10,7 +10,6 @@ export function registerComponentCommand(context: vscode.ExtensionContext) {
     const targetPath = uri.fsPath;
     console.log('🚀 -> returnvscode.commands.registerCommand -> targetPath:', targetPath);
     const nearestModule = await findNearestModule(targetPath);
-    console.log('🚀 -> returnvscode.commands.registerCommand -> nearestModule:', nearestModule);
     
     // 打开配置面板
     ConfigPanel.show(context, {

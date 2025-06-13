@@ -81,10 +81,10 @@ export class {{pascalCase moduleName}}Service {
         });
     }
     {{/if}}
-    
-    {{#if buttons.hasBatchFilterButton}}
-    batchFilter{{pascalCase componentName}}(params: any) {
-        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/batchFilter`;
+
+    {{#if (or buttons.hasBatchEnableButton table.hasEnableButton)}}
+    enable{{pascalCase componentName}}(params: any) {
+        const url = `${this.prefix}/{{moduleName}}/{{componentName}}/enable`;
         return this.ajax.request(url, {
             method: 'post',
             params: params

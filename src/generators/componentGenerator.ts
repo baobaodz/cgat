@@ -244,6 +244,17 @@ export class ComponentGenerator extends BaseGenerator {
       files.push(...detailFiles);
     }
 
+    // 如果需要启用/禁用功能且存在现有模块
+    if ((config.buttons.hasBatchEnableButton || config.table.hasEnableButton) && this.existingModulePath) {
+      const constPath = this.existingModulePath.replace('.module.ts', '.const.ts');
+      if (fs.existsSync(constPath)) {
+        const constUpdated = await this.updateExistingConst(constPath);
+        if (constUpdated) {
+          console.log('EnableStatusList 常量添加成功');
+        }
+      }
+    }
+
     const createdFiles = [];
     for (const file of files) {
       const outputPath = path.join(this.targetPath, file.output);
@@ -353,6 +364,18 @@ export class ComponentGenerator extends BaseGenerator {
         });
     }`;
       }
+      // 如果有导入按钮，添加导入方法
+      if (config.buttons.hasBatchEnableButton || config.table.hasEnableButton) {
+        newMethods += `
+  
+    enable${pascalCase(componentName)}(params: any) {
+        const url = \`\${this.prefix}/${moduleName}/${paramCase(componentName)}/enable\`;
+        return this.ajax.request(url, {
+          method: 'post',
+          params: params
+        });
+    }`;
+      }
 
       // 查找类的结束位置
       const classEndMatch = content.match(/}(\s*)$/);
@@ -372,6 +395,30 @@ export class ComponentGenerator extends BaseGenerator {
       return true;
     } catch (error) {
       console.error('更新 Service 文件失败:', error);
+      return false;
+    }
+  }
+
+  async updateExistingConst(constPath: string) {
+    try {
+      const content = await fs.promises.readFile(constPath, 'utf-8');
+
+      // 检查是否已存在 EnableStatusList
+      if (!content.includes('EnableStatusList')) {
+        // 构建新的常量定义
+        const newConst = `\n\nexport const EnableStatusList = [
+    { label: '启用', value: 1 },
+    { label: '禁用', value: 0 }
+];`;
+
+        // 追加到文件末尾
+        const updatedContent = content + newConst;
+        await fs.promises.writeFile(constPath, updatedContent);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('更新 Const 文件失败:', error);
       return false;
     }
   }

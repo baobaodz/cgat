@@ -2,6 +2,12 @@ export const Examples = [
     { label: 'example1', value: 0 },
     { label: 'example2', value: 1 }
 ];
+{{#if (or buttons.hasBatchEnableButton table.hasEnableButton)}}
+export const EnableStatusList = [
+    { label: '启用', value: 1 },
+    { label: '禁用', value: 0 }
+];
+{{/if}}
 {{#if buttons.hasImportButton}}
 export const ImportMethods = [
     { 

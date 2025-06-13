@@ -85,6 +85,10 @@
             {{#if buttons.hasDeleteButton}}
             <button nz-button nzType="default" (click.once)="handleBatchDelete()">删除</button>
             {{/if}}
+            {{#if buttons.hasBatchEnableButton}}
+            <button nz-button nzType="default" (click)="handleBatchEnable(true)">启用</button>
+            <button nz-button nzType="default" (click)="handleBatchEnable(false)">禁用</button>
+            {{/if}}
             {{#if buttons.hasBatchFilterButton}}
             <yzf-batch-select-enterprise *ngIf="globalService.currentView === 'Group'"
                 (valueOnChange)="onBatchSelectChange($event)"></yzf-batch-select-enterprise>
@@ -175,6 +179,9 @@
                 <th nzWidth="150px">示例文本</th>
                 <th nzWidth="150px" nzAlign="right">示例数字</th>
                 <th nzWidth="150px">示例枚举名称</th>
+                {{#if (or buttons.hasBatchEnableButton table.hasEnableButton)}}
+                <th nzWidth="150px">状态</th>
+                {{/if}}
                 <th nzWidth="170px" nzRight="0px" style="min-width: 170px;">操作</th>
             </tr>
         </thead>
@@ -234,12 +241,26 @@
                         \{{exampleMap[data.exampleEnum] | nullReplace }}
                     </div>
                 </td>
+                {{#if (or buttons.hasBatchEnableButton table.hasEnableButton)}}
+                <td [title]="enableStatusMap[data.enable] | nullReplace">
+                    <div class="status-circle-wrap"
+                        [class.status-success]="data.enable === 1"
+                        [class.status-default]="data.enable === 0"
+                    >
+                        \{{enableStatusMap[data.enable] | nullReplace }}
+                    </div>
+                </td>
+                {{/if}}
                 <td nzRight="0px" style="min-width: 170px;">
                     {{#if table.hasEditButton}}
                     <a (click)="handleEdit(data)" class="right8">编辑</a>
                     {{/if}}
                     {{#if table.hasViewButton}}
                     <a (click)="handleView(data)" class="right8">详情</a>
+                    {{/if}}
+                    {{#if table.hasEnableButton}}
+                    <a *ngIf="item.enable === 0" (click)="handleEnable(data, true)" class="right8">启用</a>
+                    <a *ngIf="item.enable === 1" (click)="handleEnable(data, false)" class="right8">禁用</a>
                     {{/if}}
                     {{#if table.hasDeleteButton}}
                     <a nz-popconfirm nzPopconfirmTitle="您确定删除当前数据吗？" (nzOnConfirm)="handleDelete(data)"
